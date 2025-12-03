@@ -71,6 +71,9 @@ model Patient {
   counselingSessions CounselingSession[]
   adherenceLogs     AdherenceLog[]
   alerts            Alert[]
+  cagCoordinator    Cag[]            @relation("CagCoordinator")
+  cagRotations      CagRotation[]    @relation("CagRotationPickup")
+  patientCags       PatientCag[]     @relation("PatientCagMembership")
 
   @@index([currentStatus])
   @@index([enrollmentDate])
@@ -106,6 +109,7 @@ model Staff {
   dispenses         Dispense[]
   appointments     Appointment[]
   counselingSessions CounselingSession[] @relation("Counselor")
+  cagFacilityStaff  Cag[]            @relation("CagFacilityStaff")
   auditLogs         AuditLog[]
 
   @@map("staff")
@@ -213,12 +217,12 @@ model LabTest {
 }
 
 enum TestType {
-  ViralLoad
+  ViralLoad     @map("Viral Load")
   CD4
   HB
   Creatinine
-  MalariaRDT
-  TBLAM
+  MalariaRDT    @map("Malaria RDT")
+  TBLAM         @map("TB-LAM")
   Urinalysis
 }
 
@@ -245,9 +249,9 @@ model Regimen {
 }
 
 enum RegimenLine {
-  FirstLine
-  SecondLine
-  ThirdLine
+  FirstLine     @map("First Line")
+  SecondLine    @map("Second Line")
+  ThirdLine     @map("Third Line")
 }
 
 model Dispense {
@@ -265,6 +269,7 @@ model Dispense {
   patient Patient @relation(fields: [patientId], references: [patientId], onDelete: Restrict, onUpdate: Cascade)
   regimen Regimen @relation(fields: [regimenId], references: [regimenId], onDelete: Restrict, onUpdate: Cascade)
   staff   Staff   @relation(fields: [staffId], references: [staffId], onDelete: Restrict, onUpdate: Cascade)
+  cagRotations    CagRotation[] @relation("CagRotationDispense")
 
   @@index([dispenseDate])
   @@index([patientId, dispenseDate(sort: Desc)])
@@ -340,10 +345,10 @@ model AdherenceLog {
 }
 
 enum AdherenceMethod {
-  PillCount
+  PillCount       @map("Pill Count")
   PharmacyRefill
-  SelfReport
-  CAGReport
+  SelfReport      @map("Self Report")
+  CAGReport       @map("CAG Report")
   Computed
 }
 
@@ -374,12 +379,99 @@ enum AlertType {
   MissedRefill
   LowAdherence
   SevereOI
+
+  @@map("alert_type")
 }
 
 enum AlertLevel {
   Info
   Warning
   Critical
+}
+
+// ============================================================================
+// CAG (COMMUNITY ART GROUP)
+// ============================================================================
+
+model Cag {
+  cagId              Int           @id @default(autoincrement()) @map("cag_id")
+  cagName            String        @unique @map("cag_name") @db.VarChar(150)
+  district           String        @db.VarChar(100)
+  subcounty          String        @db.VarChar(100)
+  parish             String         @db.VarChar(100)
+  village            String         @db.VarChar(100)
+  formationDate      DateTime      @map("formation_date") @db.Date
+  coordinatorPatientId Int?        @map("coordinator_patient_id")
+  facilityStaffId    Int?          @map("facility_staff_id")
+  status             CagStatus     @default(Active)
+  maxMembers         Int?          @default(6) @map("max_members") @db.UnsignedTinyInt
+  notes              String?        @db.Text
+  createdAt          DateTime      @default(now()) @map("created_at") @db.Timestamp(0)
+
+  // Relationships
+  coordinatorPatient Patient?      @relation("CagCoordinator", fields: [coordinatorPatientId], references: [patientId], onDelete: SetNull, onUpdate: Cascade)
+  facilityStaff      Staff?        @relation("CagFacilityStaff", fields: [facilityStaffId], references: [staffId], onDelete: SetNull, onUpdate: Cascade)
+  patientCags        PatientCag[]
+  rotations          CagRotation[]
+
+  @@index([district, subcounty, parish, village])
+  @@index([status])
+  @@index([formationDate])
+  @@map("cag")
+}
+
+enum CagStatus {
+  Active
+  Inactive
+  Dissolved
+}
+
+model PatientCag {
+  patientCagId  Int            @id @default(autoincrement()) @map("patient_cag_id")
+  patientId     Int            @map("patient_id")
+  cagId         Int            @map("cag_id")
+  joinDate      DateTime       @map("join_date") @db.Date
+  roleInCag     CagRole        @default(Member) @map("role_in_cag")
+  isActive      Boolean        @default(true) @map("is_active")
+  exitDate      DateTime?      @map("exit_date") @db.Date
+  exitReason    String?        @map("exit_reason") @db.VarChar(200)
+  notes         String?        @db.Text
+
+  // Relationships
+  patient       Patient        @relation("PatientCagMembership", fields: [patientId], references: [patientId], onDelete: Restrict, onUpdate: Cascade)
+  cag           Cag            @relation(fields: [cagId], references: [cagId], onDelete: Restrict, onUpdate: Cascade)
+
+  @@unique([patientId, cagId, isActive])
+  @@index([cagId, isActive])
+  @@index([patientId, isActive])
+  @@index([joinDate, isActive])
+  @@map("patient_cag")
+}
+
+enum CagRole {
+  Member
+  Coordinator
+  DeputyCoordinator  @map("Deputy Coordinator")
+}
+
+model CagRotation {
+  rotationId      BigInt   @id @default(autoincrement()) @map("rotation_id")
+  cagId           Int      @map("cag_id")
+  pickupPatientId Int     @map("pickup_patient_id")
+  rotationDate   DateTime @map("rotation_date") @db.Date
+  dispenseId     BigInt?  @map("dispense_id")
+  patientsServed Int      @map("patients_served") @db.UnsignedTinyInt
+  notes          String?  @db.Text
+
+  // Relationships
+  cag             Cag      @relation(fields: [cagId], references: [cagId], onDelete: Restrict, onUpdate: Cascade)
+  pickupPatient   Patient  @relation("CagRotationPickup", fields: [pickupPatientId], references: [patientId], onDelete: Restrict, onUpdate: Cascade)
+  dispense        Dispense? @relation("CagRotationDispense", fields: [dispenseId], references: [dispenseId], onDelete: SetNull, onUpdate: Cascade)
+
+  @@index([rotationDate])
+  @@index([cagId, rotationDate(sort: Desc)])
+  @@index([pickupPatientId])
+  @@map("cag_rotation")
 }
 
 // ============================================================================
