@@ -4,6 +4,14 @@
 -- Database Schema (MySQL 8.0+)
 -- ============================================================================
 
+-- Create database if it doesn't exist
+CREATE DATABASE IF NOT EXISTS `hiv_patient_care` 
+  DEFAULT CHARACTER SET utf8mb4 
+  DEFAULT COLLATE utf8mb4_unicode_ci;
+
+-- Use the database
+USE `hiv_patient_care`;
+
 SET FOREIGN_KEY_CHECKS = 0;
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 SET AUTOCOMMIT = 0;
@@ -12,21 +20,22 @@ SET time_zone = "+00:00";
 
 -- ============================================================================
 -- SUPER TYPE: person (Generalization)
--- Base table for all persons (patients and staff inherit from this)
+-- Stores basic information for all people in the system
+-- Patients and staff inherit from this table to avoid data duplication
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS `person` (
   `person_id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `nin` VARCHAR(20) NOT NULL UNIQUE COMMENT 'National Identification Number (NIRA-issued: CFxxxxx-xxxxx...)',
+  `nin` VARCHAR(20) NOT NULL UNIQUE COMMENT 'National ID from Uganda NIRA (CF for female, CM for male, e.g., CF12345-67890-1 or CM12345-67890-1)',
   `first_name` VARCHAR(100) NOT NULL,
   `last_name` VARCHAR(100) NOT NULL,
-  `other_name` VARCHAR(100) DEFAULT NULL COMMENT 'Optional local/tribal name',
-  `sex` ENUM('M', 'F', 'Other') NOT NULL COMMENT 'Gender - matches HMIS classification',
+  `other_name` VARCHAR(100) DEFAULT NULL COMMENT 'Optional third name (local/tribal)',
+  `sex` ENUM('M', 'F', 'Other') NOT NULL COMMENT 'Gender - matches HMIS standards',
   `date_of_birth` DATE NOT NULL,
-  `phone_contact` VARCHAR(20) DEFAULT NULL COMMENT 'MTN/Airtel phone - Uganda phone formats',
-  `district` VARCHAR(100) NOT NULL COMMENT 'District of residence (e.g., Mukono, Kampala)',
-  `subcounty` VARCHAR(100) NOT NULL COMMENT 'Used in HMIS',
-  `parish` VARCHAR(100) DEFAULT NULL COMMENT 'Required for community tracing',
+  `phone_contact` VARCHAR(20) DEFAULT NULL COMMENT 'Phone number (Uganda format: +256...)',
+  `district` VARCHAR(100) NOT NULL COMMENT 'District (e.g., Mukono, Kampala)',
+  `subcounty` VARCHAR(100) NOT NULL COMMENT 'Subcounty - required for HMIS reporting',
+  `parish` VARCHAR(100) DEFAULT NULL COMMENT 'Parish - used for community tracing',
   `village` VARCHAR(100) DEFAULT NULL COMMENT 'Village/zone (e.g., Kigombya)',
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`person_id`),
@@ -37,7 +46,8 @@ CREATE TABLE IF NOT EXISTS `person` (
 
 -- ============================================================================
 -- SUB TYPE: patient (Specialization from person)
--- Patient-specific information - inherits from person table
+-- Stores HIV patient-specific information
+-- Links to person table for basic demographics
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS `patient` (
@@ -46,7 +56,7 @@ CREATE TABLE IF NOT EXISTS `patient` (
   `patient_code` VARCHAR(50) NOT NULL UNIQUE COMMENT 'Hospital-specific ART ID (e.g., MGH/ART/0001)',
   `enrollment_date` DATE NOT NULL COMMENT 'First registration at HIV clinic',
   `art_start_date` DATE DEFAULT NULL COMMENT 'When ART started',
-  `current_status` ENUM('Active', 'Transferred-Out', 'LTFU', 'Dead') NOT NULL DEFAULT 'Active' COMMENT 'Ugandan HMIS standard statuses - Disjoint Categorization',
+  `current_status` ENUM('Active', 'Transferred-Out', 'LTFU', 'Dead') NOT NULL DEFAULT 'Active' COMMENT 'Patient status - one value only (disjoint)',
   `next_of_kin` VARCHAR(150) DEFAULT NULL COMMENT 'NOK name',
   `nok_phone` VARCHAR(20) DEFAULT NULL COMMENT 'NOK phone',
   `support_group` VARCHAR(150) DEFAULT NULL COMMENT 'e.g., Community ART group (CAG)',
@@ -62,6 +72,8 @@ CREATE TABLE IF NOT EXISTS `patient` (
 
 -- ============================================================================
 -- SUB TYPE: staff (Specialization from person)
+-- Stores staff-specific information
+-- Links to person table for basic demographics
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS `staff` (
@@ -79,7 +91,9 @@ CREATE TABLE IF NOT EXISTS `staff` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================================
--- ROLE TABLE (for system access - not job cadres)
+-- ROLE TABLE
+-- Defines system access roles (not job cadres)
+-- Staff can have multiple roles via staff_role table
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS `role` (
@@ -90,7 +104,9 @@ CREATE TABLE IF NOT EXISTS `role` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================================
--- STAFF_ROLE (Overlapping Specialization Mapping)
+-- STAFF_ROLE
+-- Maps staff to system roles (overlapping specialization)
+-- One staff member can have multiple roles simultaneously
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS `staff_role` (
@@ -102,7 +118,9 @@ CREATE TABLE IF NOT EXISTS `staff_role` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================================
--- VISIT TABLE (HMIS 031 compliant)
+-- VISIT TABLE
+-- Records clinical visits - compliant with HMIS 031 form
+-- Tracks vital signs, symptoms, and diagnoses
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS `visit` (
@@ -110,7 +128,7 @@ CREATE TABLE IF NOT EXISTS `visit` (
   `patient_id` INT UNSIGNED NOT NULL,
   `staff_id` INT UNSIGNED NOT NULL COMMENT 'Clinician',
   `visit_date` DATE NOT NULL,
-  `who_stage` TINYINT UNSIGNED DEFAULT NULL COMMENT 'WHO Stage 1-4',
+  `who_stage` TINYINT UNSIGNED DEFAULT NULL COMMENT 'WHO clinical staging (1-4)',
   `weight_kg` DECIMAL(5,2) DEFAULT NULL COMMENT 'Weight in kg',
   `bp` VARCHAR(20) DEFAULT NULL COMMENT 'Blood pressure (e.g., "120/80")',
   `tb_screening` ENUM('Negative', 'Presumptive', 'Positive') DEFAULT NULL,
@@ -128,7 +146,10 @@ CREATE TABLE IF NOT EXISTS `visit` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================================
--- LAB_TEST TABLE (Aligned with CPHL Uganda viral load program)
+-- LAB_TEST TABLE
+-- Stores laboratory test results
+-- Supports CPHL viral load program with sample IDs
+-- Test types: Viral Load, CD4, HB, Creatinine, Malaria RDT, TB-LAM, Urinalysis
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS `lab_test` (
@@ -136,7 +157,7 @@ CREATE TABLE IF NOT EXISTS `lab_test` (
   `patient_id` INT UNSIGNED NOT NULL,
   `visit_id` BIGINT UNSIGNED DEFAULT NULL,
   `staff_id` INT UNSIGNED NOT NULL COMMENT 'Staff who ordered/performed test',
-  `test_type` ENUM('Viral Load', 'CD4', 'HB', 'Creatinine', 'Malaria RDT', 'TB-LAM', 'Urinalysis') NOT NULL COMMENT 'Categorization',
+  `test_type` ENUM('Viral Load', 'CD4', 'HB', 'Creatinine', 'Malaria RDT', 'TB-LAM', 'Urinalysis') NOT NULL COMMENT 'Type of lab test (categorization)',
   `result_numeric` DECIMAL(18,4) DEFAULT NULL COMMENT 'For numeric results (VL, CD4, etc.)',
   `result_text` VARCHAR(150) DEFAULT NULL COMMENT 'For text results',
   `test_date` DATE NOT NULL,
@@ -157,7 +178,9 @@ CREATE TABLE IF NOT EXISTS `lab_test` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================================
--- REGIMEN TABLE (Uganda ART regimen catalog)
+-- REGIMEN TABLE
+-- Catalog of ART regimens following Uganda MOH standards
+-- Examples: TDF/3TC/DTG (First Line), TDF/3TC/LPV/r (Second Line)
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS `regimen` (
@@ -170,7 +193,9 @@ CREATE TABLE IF NOT EXISTS `regimen` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================================
--- DISPENSE TABLE (MOH Pharmacy Dispensing Log compliant)
+-- DISPENSE TABLE
+-- Records medication dispensing - compliant with MOH pharmacy log
+-- Tracks days supply, quantity, and calculates next refill date
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS `dispense` (
@@ -179,7 +204,7 @@ CREATE TABLE IF NOT EXISTS `dispense` (
   `staff_id` INT UNSIGNED NOT NULL COMMENT 'Pharmacist',
   `regimen_id` INT UNSIGNED NOT NULL,
   `dispense_date` DATE NOT NULL,
-  `days_supply` INT UNSIGNED NOT NULL COMMENT 'Days of medication supplied',
+  `days_supply` INT UNSIGNED NOT NULL COMMENT 'Days of medication supplied (1-365)',
   `quantity_dispensed` INT UNSIGNED NOT NULL,
   `next_refill_date` DATE NOT NULL COMMENT 'Calculated: dispense_date + days_supply',
   `notes` TEXT DEFAULT NULL,
@@ -197,6 +222,8 @@ CREATE TABLE IF NOT EXISTS `dispense` (
 
 -- ============================================================================
 -- APPOINTMENT TABLE
+-- Manages patient appointment scheduling and tracking
+-- Tracks status: Scheduled, Attended, Missed, Rescheduled, Cancelled
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS `appointment` (
@@ -214,7 +241,9 @@ CREATE TABLE IF NOT EXISTS `appointment` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================================
--- COUNSELING_SESSION TABLE (Uganda adherence counseling context)
+-- COUNSELING_SESSION TABLE
+-- Records counseling sessions for adherence support
+-- Tracks topics discussed and adherence barriers identified
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS `counseling_session` (
@@ -233,14 +262,17 @@ CREATE TABLE IF NOT EXISTS `counseling_session` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================================
--- ADHERENCE_LOG TABLE (CAG & refill-based adherence tracking)
+-- ADHERENCE_LOG TABLE
+-- Tracks medication adherence assessments
+-- Methods: Pill Count, Pharmacy Refill, Self Report, CAG Report, Computed
+-- Adherence percentage: 0-100%
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS `adherence_log` (
   `adherence_id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   `patient_id` INT UNSIGNED NOT NULL,
   `log_date` DATE NOT NULL,
-  `adherence_percent` DECIMAL(5,2) NOT NULL COMMENT '0-100%',
+  `adherence_percent` DECIMAL(5,2) NOT NULL COMMENT 'Adherence percentage (0-100%)',
   `method_used` ENUM('Pill Count', 'Pharmacy Refill', 'Self Report', 'CAG Report', 'Computed') NOT NULL,
   `notes` TEXT DEFAULT NULL,
   PRIMARY KEY (`adherence_id`),
@@ -251,7 +283,10 @@ CREATE TABLE IF NOT EXISTS `adherence_log` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================================
--- ALERT TABLE (Ugandan ART program indicators)
+-- ALERT TABLE
+-- Automated alerts for critical patient care events
+-- Types: High Viral Load, Overdue VL, Missed Appointment, Missed Refill, Low Adherence, Severe OI
+-- Levels: Info, Warning, Critical
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS `alert` (
@@ -273,6 +308,8 @@ CREATE TABLE IF NOT EXISTS `alert` (
 
 -- ============================================================================
 -- AUDIT_LOG TABLE
+-- Tracks all data changes for security and compliance
+-- Records who changed what, when, and what changed
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS `audit_log` (

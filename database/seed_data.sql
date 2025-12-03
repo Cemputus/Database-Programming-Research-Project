@@ -1,13 +1,15 @@
 -- ============================================================================
--- SEED DATA - CORRECTED VERSION
+-- SEED DATA
 -- HIV Patient Care & Treatment Monitoring System
 -- Mukono General Hospital ART Clinic
+-- Sample data for testing and development
 -- ============================================================================
 
 SET FOREIGN_KEY_CHECKS = 0;
 
 -- ============================================================================
 -- Insert Roles
+-- System access roles for staff members
 -- ============================================================================
 
 INSERT INTO `role` (`role_name`) VALUES
@@ -20,17 +22,18 @@ INSERT INTO `role` (`role_name`) VALUES
 
 -- ============================================================================
 -- Insert Staff (Ugandan Names)
+-- Sample staff members with Ugandan names and locations
 -- ============================================================================
 
 -- Insert Persons for Staff
 INSERT INTO `person` (`nin`, `first_name`, `last_name`, `other_name`, `sex`, `date_of_birth`, `phone_contact`, `district`, `subcounty`, `parish`, `village`) VALUES
-('CF12345-67890-1', 'James', 'Nakato', 'Mukasa', 'M', '1980-05-15', '+256701234567', 'Mukono', 'Mukono Central', 'Mukono Town', 'Kigombya'),
+('CM12345-67890-1', 'James', 'Nakato', 'Mukasa', 'M', '1980-05-15', '+256701234567', 'Mukono', 'Mukono Central', 'Mukono Town', 'Kigombya'),
 ('CF12345-67890-2', 'Sarah', 'Kigozi', 'Nakiganda', 'F', '1985-08-22', '+256702345678', 'Mukono', 'Mukono Central', 'Mukono Town', 'Ntinda'),
-('CF12345-67890-3', 'David', 'Mugerwa', 'Ssemwogerere', 'M', '1990-03-10', '+256703456789', 'Mukono', 'Nakifuma', 'Nakifuma', 'Kasawo'),
+('CM12345-67890-3', 'David', 'Mugerwa', 'Ssemwogerere', 'M', '1990-03-10', '+256703456789', 'Mukono', 'Nakifuma', 'Nakifuma', 'Kasawo'),
 ('CF12345-67890-4', 'Grace', 'Nalubega', 'Nabukeera', 'F', '1988-11-30', '+256704567890', 'Mukono', 'Mukono Central', 'Mukono Town', 'Kigombya'),
-('CF12345-67890-5', 'Peter', 'Ssebunya', 'Kigozi', 'M', '1992-07-18', '+256705678901', 'Mukono', 'Nakifuma', 'Nakifuma', 'Kasawo'),
+('CM12345-67890-5', 'Peter', 'Ssebunya', 'Kigozi', 'M', '1992-07-18', '+256705678901', 'Mukono', 'Nakifuma', 'Nakifuma', 'Kasawo'),
 ('CF12345-67890-6', 'Mary', 'Namukasa', 'Nakato', 'F', '1987-04-25', '+256706789012', 'Mukono', 'Mukono Central', 'Mukono Town', 'Ntinda'),
-('CF12345-67890-7', 'John', 'Kawuma', 'Mukasa', 'M', '1983-09-12', '+256707890123', 'Mukono', 'Mukono Central', 'Mukono Town', 'Kigombya'),
+('CM12345-67890-7', 'John', 'Kawuma', 'Mukasa', 'M', '1983-09-12', '+256707890123', 'Mukono', 'Mukono Central', 'Mukono Town', 'Kigombya'),
 ('CF12345-67890-8', 'Ruth', 'Nakiganda', 'Nabukeera', 'F', '1991-12-05', '+256708901234', 'Mukono', 'Nakifuma', 'Nakifuma', 'Kasawo');
 
 -- Insert Staff
@@ -45,6 +48,7 @@ INSERT INTO `staff` (`person_id`, `staff_code`, `cadre`, `moH_registration_no`, 
 (8, 'STF008', 'Midwife', 'MOH-MID-008', '2018-09-15', TRUE);
 
 -- Assign Staff Roles (Overlapping Specialization)
+-- Staff can have multiple roles (e.g., Nurse can be db_clinician and db_admin)
 INSERT INTO `staff_role` (`staff_id`, `role_id`) VALUES
 (1, 2), -- Doctor -> db_clinician
 (2, 2), -- Clinical Officer -> db_clinician
@@ -58,6 +62,7 @@ INSERT INTO `staff_role` (`staff_id`, `role_id`) VALUES
 
 -- ============================================================================
 -- Insert ART Regimens (Uganda MOH Standard)
+-- Standard ART regimens following Uganda Ministry of Health guidelines
 -- ============================================================================
 
 INSERT INTO `regimen` (`regimen_code`, `regimen_name`, `line`) VALUES
@@ -72,19 +77,20 @@ INSERT INTO `regimen` (`regimen_code`, `regimen_name`, `line`) VALUES
 
 -- ============================================================================
 -- Insert Sample Patients (Ugandan Names)
+-- Sample HIV patients with Ugandan names and locations
 -- ============================================================================
 
 -- Insert Persons for Patients
 INSERT INTO `person` (`nin`, `first_name`, `last_name`, `other_name`, `sex`, `date_of_birth`, `phone_contact`, `district`, `subcounty`, `parish`, `village`) VALUES
-('CF23456-78901-1', 'Moses', 'Kigozi', 'Ssemakula', 'M', '1985-06-20', '+256712345678', 'Mukono', 'Mukono Central', 'Mukono Town', 'Kigombya'),
+('CM23456-78901-1', 'Moses', 'Kigozi', 'Ssemakula', 'M', '1985-06-20', '+256712345678', 'Mukono', 'Mukono Central', 'Mukono Town', 'Kigombya'),
 ('CF23456-78901-2', 'Esther', 'Nalubega', 'Nakiganda', 'F', '1990-09-15', '+256723456789', 'Mukono', 'Nakifuma', 'Nakifuma', 'Kasawo'),
-('CF23456-78901-3', 'Joseph', 'Ssebunya', 'Mukasa', 'M', '1988-03-12', '+256734567890', 'Mukono', 'Mukono Central', 'Mukono Town', 'Ntinda'),
+('CM23456-78901-3', 'Joseph', 'Ssebunya', 'Mukasa', 'M', '1988-03-12', '+256734567890', 'Mukono', 'Mukono Central', 'Mukono Town', 'Ntinda'),
 ('CF23456-78901-4', 'Rebecca', 'Namukasa', 'Nabukeera', 'F', '1992-11-25', '+256745678901', 'Mukono', 'Mukono Central', 'Mukono Town', 'Kigombya'),
-('CF23456-78901-5', 'Daniel', 'Mugerwa', 'Kigozi', 'M', '1987-07-08', '+256756789012', 'Mukono', 'Nakifuma', 'Nakifuma', 'Kasawo'),
+('CM23456-78901-5', 'Daniel', 'Mugerwa', 'Kigozi', 'M', '1987-07-08', '+256756789012', 'Mukono', 'Nakifuma', 'Nakifuma', 'Kasawo'),
 ('CF23456-78901-6', 'Priscilla', 'Kawuma', 'Nakato', 'F', '1991-04-30', '+256767890123', 'Mukono', 'Mukono Central', 'Mukono Town', 'Ntinda'),
-('CF23456-78901-7', 'Samuel', 'Nakato', 'Ssemwogerere', 'M', '1989-10-18', '+256778901234', 'Mukono', 'Mukono Central', 'Mukono Town', 'Kigombya'),
+('CM23456-78901-7', 'Samuel', 'Nakato', 'Ssemwogerere', 'M', '1989-10-18', '+256778901234', 'Mukono', 'Mukono Central', 'Mukono Town', 'Kigombya'),
 ('CF23456-78901-8', 'Hannah', 'Kigozi', 'Nabukeera', 'F', '1993-02-14', '+256789012345', 'Mukono', 'Nakifuma', 'Nakifuma', 'Kasawo'),
-('CF23456-78901-9', 'Isaac', 'Nalubega', 'Mukasa', 'M', '1986-08-22', '+256790123456', 'Mukono', 'Mukono Central', 'Mukono Town', 'Ntinda'),
+('CM23456-78901-9', 'Isaac', 'Nalubega', 'Mukasa', 'M', '1986-08-22', '+256790123456', 'Mukono', 'Mukono Central', 'Mukono Town', 'Ntinda'),
 ('CF23456-78901-10', 'Ruth', 'Ssebunya', 'Nakiganda', 'F', '1990-12-05', '+256701234567', 'Mukono', 'Mukono Central', 'Mukono Town', 'Kigombya');
 
 -- Insert Patients
@@ -102,6 +108,7 @@ INSERT INTO `patient` (`person_id`, `patient_code`, `enrollment_date`, `art_star
 
 -- ============================================================================
 -- Insert Sample Visits
+-- Clinical visit records with vital signs and assessments
 -- ============================================================================
 
 INSERT INTO `visit` (`patient_id`, `staff_id`, `visit_date`, `who_stage`, `weight_kg`, `bp`, `tb_screening`, `symptoms`, `oi_diagnosis`, `next_appointment_date`) VALUES
@@ -115,6 +122,7 @@ INSERT INTO `visit` (`patient_id`, `staff_id`, `visit_date`, `who_stage`, `weigh
 
 -- ============================================================================
 -- Insert Sample Lab Tests
+-- Laboratory test results including viral load and CD4 counts
 -- ============================================================================
 
 INSERT INTO `lab_test` (`patient_id`, `visit_id`, `staff_id`, `test_type`, `test_date`, `result_numeric`, `result_text`, `units`, `cphl_sample_id`, `result_status`) VALUES
@@ -135,6 +143,7 @@ INSERT INTO `lab_test` (`patient_id`, `visit_id`, `staff_id`, `test_type`, `test
 
 -- ============================================================================
 -- Insert Sample Dispenses
+-- Medication dispensing records with refill dates
 -- ============================================================================
 
 INSERT INTO `dispense` (`patient_id`, `staff_id`, `regimen_id`, `dispense_date`, `days_supply`, `quantity_dispensed`, `next_refill_date`, `notes`) VALUES
@@ -155,6 +164,7 @@ INSERT INTO `dispense` (`patient_id`, `staff_id`, `regimen_id`, `dispense_date`,
 
 -- ============================================================================
 -- Insert Sample Appointments
+-- Patient appointment scheduling records
 -- ============================================================================
 
 INSERT INTO `appointment` (`patient_id`, `staff_id`, `scheduled_date`, `status`, `reason`) VALUES
@@ -169,6 +179,7 @@ INSERT INTO `appointment` (`patient_id`, `staff_id`, `scheduled_date`, `status`,
 
 -- ============================================================================
 -- Insert Sample Counseling Sessions
+-- Adherence counseling session records
 -- ============================================================================
 
 INSERT INTO `counseling_session` (`patient_id`, `counselor_id`, `session_date`, `topic`, `adherence_barriers`, `notes`) VALUES
@@ -179,6 +190,7 @@ INSERT INTO `counseling_session` (`patient_id`, `counselor_id`, `session_date`, 
 
 -- ============================================================================
 -- Insert Sample Adherence Logs
+-- Medication adherence assessment records with percentages
 -- ============================================================================
 
 INSERT INTO `adherence_log` (`patient_id`, `log_date`, `adherence_percent`, `method_used`, `notes`) VALUES

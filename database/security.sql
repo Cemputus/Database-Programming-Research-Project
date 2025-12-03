@@ -7,7 +7,7 @@
 -- Create Database Roles
 -- ============================================================================
 
--- Drop roles if they exist (MySQL 8.0+)
+-- Drop existing roles
 DROP ROLE IF EXISTS 'db_admin';
 DROP ROLE IF EXISTS 'db_clinician';
 DROP ROLE IF EXISTS 'db_lab';
@@ -26,7 +26,8 @@ CREATE ROLE 'db_readonly';
 CREATE ROLE 'db_patient';
 
 -- ============================================================================
--- GRANT PRIVILEGES: db_admin (Full Access)
+-- GRANT PRIVILEGES: db_admin
+-- Full access: all tables, procedures, views, schema changes
 -- ============================================================================
 
 GRANT ALL PRIVILEGES ON *.* TO 'db_admin';
@@ -35,21 +36,17 @@ GRANT EXECUTE ON PROCEDURE *.* TO 'db_admin';
 GRANT CREATE, ALTER, DROP, INDEX, CREATE VIEW, SHOW VIEW ON *.* TO 'db_admin';
 
 -- ============================================================================
--- GRANT PRIVILEGES: db_clinician (Clinical Staff - Doctors, Clinical Officers, Nurses)
+-- GRANT PRIVILEGES: db_clinician
+-- Clinical staff: read all, write to visit, appointment, patient, lab_test, adherence_log, alert
 -- ============================================================================
 
--- Read access to all tables
 GRANT SELECT ON *.* TO 'db_clinician';
-
--- Write access to clinical tables
 GRANT INSERT, UPDATE ON `visit` TO 'db_clinician';
 GRANT INSERT, UPDATE ON `appointment` TO 'db_clinician';
 GRANT INSERT, UPDATE ON `patient` TO 'db_clinician';
-GRANT INSERT, UPDATE ON `lab_test` TO 'db_clinician'; -- Can order tests
+GRANT INSERT, UPDATE ON `lab_test` TO 'db_clinician';
 GRANT INSERT, UPDATE ON `adherence_log` TO 'db_clinician';
-GRANT INSERT, UPDATE ON `alert` TO 'db_clinician'; -- Can acknowledge/resolve alerts
-
--- Read-only access to sensitive tables
+GRANT INSERT, UPDATE ON `alert` TO 'db_clinician';
 GRANT SELECT ON `audit_log` TO 'db_clinician';
 
 -- Execute procedures
@@ -60,67 +57,55 @@ GRANT EXECUTE ON PROCEDURE `sp_update_patient_status_ltfu` TO 'db_clinician';
 GRANT EXECUTE ON PROCEDURE `sp_check_missed_refills` TO 'db_clinician';
 
 -- ============================================================================
--- GRANT PRIVILEGES: db_lab (Lab Technicians)
+-- GRANT PRIVILEGES: db_lab
+-- Lab technicians: read patient/staff data, write lab test results
 -- ============================================================================
 
--- Read access to patient and lab test tables
 GRANT SELECT ON `patient` TO 'db_lab';
 GRANT SELECT ON `person` TO 'db_lab';
 GRANT SELECT ON `staff` TO 'db_lab';
 GRANT SELECT ON `lab_test` TO 'db_lab';
-
--- Write access to lab test results only
 GRANT INSERT, UPDATE ON `lab_test` TO 'db_lab';
-
--- Read-only access to other tables
 GRANT SELECT ON `visit` TO 'db_lab';
 GRANT SELECT ON `regimen` TO 'db_lab';
 GRANT SELECT ON `dispense` TO 'db_lab';
 
 -- ============================================================================
--- GRANT PRIVILEGES: db_pharmacy (Pharmacists)
+-- GRANT PRIVILEGES: db_pharmacy
+-- Pharmacists: read patient/regimen data, write dispense records
 -- ============================================================================
 
--- Read access to patient and regimen tables
 GRANT SELECT ON `patient` TO 'db_pharmacy';
 GRANT SELECT ON `person` TO 'db_pharmacy';
 GRANT SELECT ON `regimen` TO 'db_pharmacy';
 GRANT SELECT ON `dispense` TO 'db_pharmacy';
 GRANT SELECT ON `visit` TO 'db_pharmacy';
-
--- Write access to dispensing
 GRANT INSERT, UPDATE ON `dispense` TO 'db_pharmacy';
-
--- Read-only access to other tables
 GRANT SELECT ON `lab_test` TO 'db_pharmacy';
 GRANT SELECT ON `appointment` TO 'db_pharmacy';
 GRANT SELECT ON `alert` TO 'db_pharmacy';
 
 -- ============================================================================
--- GRANT PRIVILEGES: db_counselor (Counselors)
+-- GRANT PRIVILEGES: db_counselor
+-- Counselors: read patient data, write counseling_session, adherence_log, appointment
 -- ============================================================================
 
--- Read access to patient information
 GRANT SELECT ON `patient` TO 'db_counselor';
 GRANT SELECT ON `person` TO 'db_counselor';
 GRANT SELECT ON `adherence_log` TO 'db_counselor';
 GRANT SELECT ON `visit` TO 'db_counselor';
-
--- Write access to counseling sessions and adherence
 GRANT INSERT, UPDATE ON `counseling_session` TO 'db_counselor';
 GRANT INSERT, UPDATE ON `adherence_log` TO 'db_counselor';
-GRANT INSERT, UPDATE ON `appointment` TO 'db_counselor'; -- Can schedule counseling appointments
-
--- Read-only access to other tables
+GRANT INSERT, UPDATE ON `appointment` TO 'db_counselor';
 GRANT SELECT ON `lab_test` TO 'db_counselor';
 GRANT SELECT ON `dispense` TO 'db_counselor';
 GRANT SELECT ON `alert` TO 'db_counselor';
 
 -- ============================================================================
--- GRANT PRIVILEGES: db_readonly (Records Officers, Report Viewers)
+-- GRANT PRIVILEGES: db_readonly
+-- Records officers: read-only access to all tables and views
 -- ============================================================================
 
--- Read-only access to all tables
 GRANT SELECT ON *.* TO 'db_readonly';
 
 -- Read-only access to views
@@ -161,13 +146,10 @@ GRANT SELECT ON `v_staff_with_roles` TO 'db_readonly';
 -- SET DEFAULT ROLE 'db_readonly' FOR 'records_officer1'@'localhost';
 
 -- ============================================================================
--- GRANT PRIVILEGES: db_patient (Patient Self-Service)
+-- GRANT PRIVILEGES: db_patient
+-- Patients: read-only access to own data via patient views and procedures
+-- Can read own patient and person records for verification
 -- ============================================================================
-
--- Patients can only access their own data through views and stored procedures
--- They cannot directly query tables for security
-
--- Grant access to patient self-service views
 GRANT SELECT ON `v_patient_dashboard` TO 'db_patient';
 GRANT SELECT ON `v_patient_visit_history` TO 'db_patient';
 GRANT SELECT ON `v_patient_lab_history` TO 'db_patient';
@@ -177,7 +159,7 @@ GRANT SELECT ON `v_patient_adherence_history` TO 'db_patient';
 GRANT SELECT ON `v_patient_alerts` TO 'db_patient';
 GRANT SELECT ON `v_patient_progress_timeline` TO 'db_patient';
 
--- Grant execute on patient self-service stored procedures
+-- Execute patient self-service procedures
 GRANT EXECUTE ON PROCEDURE `sp_patient_dashboard` TO 'db_patient';
 GRANT EXECUTE ON PROCEDURE `sp_patient_visits` TO 'db_patient';
 GRANT EXECUTE ON PROCEDURE `sp_patient_lab_tests` TO 'db_patient';
@@ -189,20 +171,9 @@ GRANT EXECUTE ON PROCEDURE `sp_patient_progress_timeline` TO 'db_patient';
 GRANT EXECUTE ON PROCEDURE `sp_patient_next_appointment` TO 'db_patient';
 GRANT EXECUTE ON PROCEDURE `sp_patient_summary_stats` TO 'db_patient';
 
--- Patients can read their own patient record (for verification)
--- Note: Application layer should filter by patient_code for security
+-- Patients can read own patient record for verification
 GRANT SELECT ON `patient` TO 'db_patient';
 GRANT SELECT ON `person` TO 'db_patient';
-
--- ============================================================================
--- Example: Create Patient User
--- ============================================================================
-
--- Note: In production, create patient users with their patient_code as username
--- Example:
--- CREATE USER 'patient_MGH_ART_0001'@'localhost' IDENTIFIED BY 'secure_password';
--- GRANT 'db_patient' TO 'patient_MGH_ART_0001'@'localhost';
--- SET DEFAULT ROLE 'db_patient' FOR 'patient_MGH_ART_0001'@'localhost';
 
 -- ============================================================================
 -- FLUSH PRIVILEGES

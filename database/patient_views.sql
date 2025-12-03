@@ -1,11 +1,11 @@
 -- ============================================================================
 -- PATIENT SELF-SERVICE VIEWS
--- HIV Patient Care & Treatment Monitoring System
--- Allows patients to view their own data for progress tracking
+-- Patients can query these views to see their own data
 -- ============================================================================
 
 -- ============================================================================
--- VIEW: Patient Dashboard (Main View for Patient Self-Service)
+-- VIEW: Patient Dashboard
+-- Complete patient overview: next appointment, last VL/CD4, current regimen, adherence
 -- ============================================================================
 
 CREATE OR REPLACE VIEW `v_patient_dashboard` AS
@@ -23,7 +23,6 @@ SELECT
     p.treatment_partner,
     p.next_of_kin,
     p.nok_phone,
-    -- Next Appointment
     (SELECT scheduled_date 
      FROM appointment 
      WHERE patient_id = p.patient_id 
@@ -41,10 +40,8 @@ SELECT
          LIMIT 1), 
         CURDATE()
      )) AS days_until_next_appointment,
-    -- Last Visit
     (SELECT MAX(visit_date) FROM visit WHERE patient_id = p.patient_id) AS last_visit_date,
     (SELECT DATEDIFF(CURDATE(), MAX(visit_date)) FROM visit WHERE patient_id = p.patient_id) AS days_since_last_visit,
-    -- Last Viral Load
     (SELECT MAX(test_date) 
      FROM lab_test 
      WHERE patient_id = p.patient_id 
@@ -67,7 +64,6 @@ SELECT
        AND test_type = 'Viral Load' 
        AND result_status = 'Completed'
      ORDER BY test_date DESC LIMIT 1) AS vl_status,
-    -- Last CD4
     (SELECT MAX(test_date) 
      FROM lab_test 
      WHERE patient_id = p.patient_id 
@@ -79,21 +75,18 @@ SELECT
        AND test_type = 'CD4' 
        AND result_status = 'Completed'
      ORDER BY test_date DESC LIMIT 1) AS last_cd4_result,
-    -- Current Regimen
     (SELECT r.regimen_name 
      FROM dispense d
      INNER JOIN regimen r ON d.regimen_id = r.regimen_id
      WHERE d.patient_id = p.patient_id
      ORDER BY d.dispense_date DESC
      LIMIT 1) AS current_regimen,
-    -- Next Refill Date
     (SELECT MAX(next_refill_date) 
      FROM dispense 
      WHERE patient_id = p.patient_id) AS next_refill_date,
     (SELECT DATEDIFF(MAX(next_refill_date), CURDATE()) 
      FROM dispense 
      WHERE patient_id = p.patient_id) AS days_until_refill,
-    -- Last Adherence
     (SELECT adherence_percent 
      FROM adherence_log 
      WHERE patient_id = p.patient_id 
@@ -115,7 +108,6 @@ SELECT
      FROM adherence_log 
      WHERE patient_id = p.patient_id 
      ORDER BY log_date DESC LIMIT 1) AS adherence_category,
-    -- Active Alerts
     (SELECT COUNT(*) 
      FROM alert 
      WHERE patient_id = p.patient_id 
@@ -126,6 +118,7 @@ WHERE p.current_status = 'Active';
 
 -- ============================================================================
 -- VIEW: Patient Visit History
+-- All clinical visits with vital signs, symptoms, and clinician information
 -- ============================================================================
 
 CREATE OR REPLACE VIEW `v_patient_visit_history` AS
@@ -149,6 +142,7 @@ ORDER BY v.visit_date DESC;
 
 -- ============================================================================
 -- VIEW: Patient Lab Test History
+-- All lab test results with status descriptions (High/Suppressed for VL, Low/Normal for CD4)
 -- ============================================================================
 
 CREATE OR REPLACE VIEW `v_patient_lab_history` AS
@@ -176,6 +170,7 @@ ORDER BY lt.test_date DESC, lt.test_type;
 
 -- ============================================================================
 -- VIEW: Patient Medication History
+-- All medication dispenses with refill status (Overdue/Due Soon/On Track)
 -- ============================================================================
 
 CREATE OR REPLACE VIEW `v_patient_medication_history` AS
@@ -201,6 +196,7 @@ ORDER BY d.dispense_date DESC;
 
 -- ============================================================================
 -- VIEW: Patient Appointment Schedule
+-- All appointments with status descriptions and days until appointment
 -- ============================================================================
 
 CREATE OR REPLACE VIEW `v_patient_appointments` AS
@@ -227,6 +223,7 @@ ORDER BY a.scheduled_date DESC;
 
 -- ============================================================================
 -- VIEW: Patient Adherence History
+-- All adherence assessments with categories (Excellent/Good/Fair/Needs Improvement)
 -- ============================================================================
 
 CREATE OR REPLACE VIEW `v_patient_adherence_history` AS
@@ -249,6 +246,7 @@ ORDER BY al.log_date DESC;
 
 -- ============================================================================
 -- VIEW: Patient Alerts & Notifications
+-- All patient alerts sorted by priority (Critical > Warning > Info)
 -- ============================================================================
 
 CREATE OR REPLACE VIEW `v_patient_alerts` AS
@@ -280,6 +278,7 @@ ORDER BY
 
 -- ============================================================================
 -- VIEW: Patient Progress Summary (Timeline View)
+-- Chronological timeline: enrollment, ART start, visits, lab tests, medications, adherence
 -- ============================================================================
 
 CREATE OR REPLACE VIEW `v_patient_progress_timeline` AS

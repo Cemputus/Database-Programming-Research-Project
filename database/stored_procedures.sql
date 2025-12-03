@@ -7,7 +7,9 @@ DELIMITER //
 
 -- ============================================================================
 -- SP: Compute Adherence for a Patient
--- Calculates medication adherence percentage based on dispense records
+-- Calculates medication adherence percentage (0-100%)
+-- Based on dispense records: (pills taken / pills expected) × 100
+-- Saves result to adherence_log with method 'Computed'
 -- ============================================================================
 
 DROP PROCEDURE IF EXISTS `sp_compute_adherence`//
@@ -23,7 +25,7 @@ BEGIN
     DECLARE v_days_in_period INT;
     DECLARE v_daily_pills INT UNSIGNED DEFAULT 1;
     
-    -- Get most recent dispense record
+    -- Get most recent dispense to determine current prescription
     SELECT d.days_supply, d.quantity_dispensed, d.dispense_date
     INTO v_days_in_period, v_pills_expected, v_daily_pills
     FROM dispense d
@@ -32,13 +34,13 @@ BEGIN
     ORDER BY d.dispense_date DESC
     LIMIT 1;
     
-    -- Use default period if no dispense found
+    -- Default to 30 days if no dispense record found
     IF v_days_in_period IS NULL THEN
         SET v_days_in_period = DATEDIFF(COALESCE(p_end_date, CURDATE()), COALESCE(p_start_date, DATE_SUB(CURDATE(), INTERVAL 30 DAY)));
         SET v_pills_expected = v_days_in_period * v_daily_pills;
     END IF;
     
-    -- Calculate pills missed
+    -- Calculate missed pills (simplified - uses dispense data only)
     SET v_pills_missed = GREATEST(0, v_pills_expected - COALESCE((
         SELECT SUM(quantity_dispensed) 
         FROM dispense 
@@ -76,26 +78,9 @@ END//
 
 -- ============================================================================
 -- SP: Check Overdue Viral Load Tests
--- ============================================================================
---
--- What this does:
--- This procedure finds all patients who are overdue for their viral load test.
--- According to Uganda guidelines, patients should have a VL test every 6 months (180 days).
---
--- How it works:
--- 1. We look at every active patient
--- 2. We find when they last had a viral load test
--- 3. If it's been more than 180 days, we create an alert
--- 4. This alert tells staff "Hey, this patient needs a test scheduled!"
---
--- Why this matters:
--- Viral load tests tell us if the medication is working. If the virus is suppressed
--- (low or undetectable), the treatment is successful. If it's high, we need to adjust
--- the treatment plan. Regular testing is crucial for patient health.
---
--- When to use:
--- This runs automatically every day via a scheduled event. You can also run it manually
--- if you want to check right now.
+-- Finds patients overdue for VL test (>180 days per Uganda guidelines)
+-- Creates 'Overdue VL' alerts for patients needing tests
+-- Runs daily via scheduled event
 -- ============================================================================
 
 DROP PROCEDURE IF EXISTS `sp_check_overdue_vl`//
@@ -107,7 +92,7 @@ BEGIN
     DECLARE v_days_since_vl INT;
     DECLARE v_alert_exists INT;
     
-    -- Cursor for patients who need VL monitoring
+    -- Process each active patient on ART
     DECLARE patient_cursor CURSOR FOR
         SELECT DISTINCT p.patient_id
         FROM patient p
@@ -124,7 +109,7 @@ BEGIN
             LEAVE patient_loop;
         END IF;
         
-        -- Get last viral load test date
+        -- Find most recent completed VL test
         SELECT MAX(test_date)
         INTO v_last_vl_date
         FROM lab_test
@@ -132,8 +117,7 @@ BEGIN
           AND test_type = 'Viral Load'
           AND result_status = 'Completed';
         
-        -- Calculate days since last VL test
-        -- If no test found, count from ART start date
+        -- Calculate days since last VL (or since ART start if no test)
         IF v_last_vl_date IS NULL THEN
             SET v_days_since_vl = DATEDIFF(CURDATE(), (
                 SELECT art_start_date 
@@ -181,7 +165,9 @@ END//
 
 -- ============================================================================
 -- SP: Mark Missed Appointments
--- Marks appointments as missed if past due by grace_days (default 14 days)
+-- Updates appointments to 'Missed' status if past due by grace_days (default 14)
+-- Creates alerts for missed appointments
+-- Runs daily via scheduled event
 -- ============================================================================
 
 DROP PROCEDURE IF EXISTS `sp_mark_missed_appointments`//
@@ -224,7 +210,9 @@ END//
 
 -- ============================================================================
 -- SP: Update Patient Status to LTFU (Lost to Follow-Up)
--- Marks patients as LTFU if inactive for >90 days (no visit or dispense)
+-- Marks patients as LTFU if no visit or dispense for >90 days (Uganda standard)
+-- Creates LTFU alerts
+-- Runs daily via scheduled event
 -- ============================================================================
 
 DROP PROCEDURE IF EXISTS `sp_update_patient_status_ltfu`()
@@ -288,7 +276,9 @@ END//
 
 -- ============================================================================
 -- SP: Check Missed Refills
--- Creates alerts for patients with missed medication refills
+-- Finds patients with missed refills (next_refill_date < today)
+-- Creates 'Missed Refill' alerts
+-- Runs daily via scheduled event
 -- ============================================================================
 
 DROP PROCEDURE IF EXISTS `sp_check_missed_refills`()

@@ -1,10 +1,11 @@
 -- ============================================================================
--- VIEWS - CORRECTED VERSION
+-- VIEWS
 -- HIV Patient Care & Treatment Monitoring System
 -- ============================================================================
 
 -- ============================================================================
 -- VIEW: Active Patients Summary
+-- Summary of active patients: last visit, last VL, last adherence, etc.
 -- ============================================================================
 
 CREATE OR REPLACE VIEW `v_active_patients_summary` AS
@@ -38,6 +39,7 @@ WHERE p.current_status = 'Active';
 
 -- ============================================================================
 -- VIEW: Patient Care Timeline
+-- Chronological timeline of all patient events (enrollment, visits, tests, dispenses)
 -- ============================================================================
 
 CREATE OR REPLACE VIEW `v_patient_care_timeline` AS
@@ -98,6 +100,7 @@ ORDER BY patient_id, event_date DESC;
 
 -- ============================================================================
 -- VIEW: Active Alerts Summary
+-- All unresolved alerts sorted by severity (Critical > Warning > Info)
 -- ============================================================================
 
 CREATE OR REPLACE VIEW `v_active_alerts_summary` AS
@@ -127,6 +130,8 @@ ORDER BY
 
 -- ============================================================================
 -- VIEW: Viral Load Monitoring
+-- VL status for active patients: last test date, result, status (High/Suppressed/Unknown)
+-- Test status: Overdue (>180 days), Due Soon (>120 days), Current
 -- ============================================================================
 
 CREATE OR REPLACE VIEW `v_viral_load_monitoring` AS
@@ -192,6 +197,8 @@ WHERE p.current_status = 'Active'
 
 -- ============================================================================
 -- VIEW: Adherence Summary
+-- Latest adherence assessment for each active patient with category
+-- Categories: Excellent (≥95%), Good (≥85%), Fair (≥70%), Poor (<70%)
 -- ============================================================================
 
 CREATE OR REPLACE VIEW `v_adherence_summary` AS
@@ -224,6 +231,7 @@ WHERE p.current_status = 'Active';
 
 -- ============================================================================
 -- VIEW: Staff with Roles
+-- Staff information with all assigned system roles (overlapping specialization)
 -- ============================================================================
 
 CREATE OR REPLACE VIEW `v_staff_with_roles` AS

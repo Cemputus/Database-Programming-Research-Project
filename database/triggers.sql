@@ -1,13 +1,15 @@
 -- ============================================================================
 -- TRIGGERS
 -- HIV Patient Care & Treatment Monitoring System
+-- Automatically creates alerts and logs changes
 -- ============================================================================
 
 DELIMITER //
 
 -- ============================================================================
 -- TRIGGER: High Viral Load Alert on Lab Test Insert
--- Creates alert when VL result > 1000 copies/mL
+-- Fires after inserting lab test
+-- Creates 'High Viral Load' alert if VL > 1000 copies/mL (critical threshold)
 -- ============================================================================
 
 DROP TRIGGER IF EXISTS `trg_lab_test_high_vl_alert`//
@@ -15,7 +17,7 @@ CREATE TRIGGER `trg_lab_test_high_vl_alert`
 AFTER INSERT ON `lab_test`
 FOR EACH ROW
 BEGIN
-    -- Check if VL test completed and result > 1000
+    -- Create alert if viral load exceeds 1000 copies/mL
     IF NEW.test_type = 'Viral Load' 
        AND NEW.result_status = 'Completed' 
        AND NEW.result_numeric IS NOT NULL 
@@ -39,7 +41,8 @@ END//
 
 -- ============================================================================
 -- TRIGGER: High Viral Load Alert on Lab Test Update
--- Creates alert when VL result updated to > 1000 copies/mL
+-- Fires after updating lab test
+-- Creates alert if VL result changes from ≤1000 to >1000
 -- ============================================================================
 
 DROP TRIGGER IF EXISTS `trg_lab_test_high_vl_alert_update`//
@@ -71,7 +74,8 @@ END//
 
 -- ============================================================================
 -- TRIGGER: Missed Appointment Alert
--- Creates alert when appointment status changes to Missed
+-- Fires after updating appointment
+-- Creates 'Missed Appointment' alert when status changes to 'Missed'
 -- ============================================================================
 
 DROP TRIGGER IF EXISTS `trg_appointment_missed_alert`//
@@ -99,7 +103,8 @@ END//
 
 -- ============================================================================
 -- TRIGGER: Audit Log for Patient Table
--- Logs patient record changes to audit_log
+-- Fires after inserting/updating patient
+-- Logs all patient record changes to audit_log for compliance
 -- ============================================================================
 
 DROP TRIGGER IF EXISTS `trg_patient_audit_insert`//
@@ -140,7 +145,8 @@ END//
 
 -- ============================================================================
 -- TRIGGER: Audit Log for Visit Table
--- Logs visit record creation to audit_log
+-- Fires after inserting visit
+-- Logs visit creation to audit_log
 -- ============================================================================
 
 DROP TRIGGER IF EXISTS `trg_visit_audit_insert`//
@@ -163,7 +169,8 @@ END//
 
 -- ============================================================================
 -- TRIGGER: Audit Log for Lab Test Table
--- Logs lab test changes to audit_log
+-- Fires after inserting/updating lab test
+-- Logs result status and value changes to audit_log
 -- ============================================================================
 
 DROP TRIGGER IF EXISTS `trg_lab_test_audit_insert`//
@@ -215,7 +222,8 @@ END//
 
 -- ============================================================================
 -- TRIGGER: Audit Log for Dispense Table
--- Logs dispense record creation to audit_log
+-- Fires after inserting dispense
+-- Logs medication dispensing to audit_log
 -- ============================================================================
 
 DROP TRIGGER IF EXISTS `trg_dispense_audit_insert`//
@@ -238,7 +246,9 @@ END//
 
 -- ============================================================================
 -- TRIGGER: Low Adherence Alert
--- Creates alert when adherence < 85%
+-- Fires after inserting adherence log
+-- Creates 'Low Adherence' alert if adherence < 85% (except computed method)
+-- Alert level: Critical if <70%, Warning if <80%, Info if <85%
 -- ============================================================================
 
 DROP TRIGGER IF EXISTS `trg_adherence_low_alert`//

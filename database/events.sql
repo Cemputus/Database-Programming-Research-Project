@@ -1,15 +1,16 @@
 -- ============================================================================
 -- SCHEDULED EVENTS
 -- HIV Patient Care & Treatment Monitoring System
+-- Automated daily/weekly tasks that run automatically
 -- ============================================================================
 
--- Enable Event Scheduler
 SET GLOBAL event_scheduler = ON;
 
 DELIMITER //
 
 -- ============================================================================
 -- EVENT: Daily Check Overdue Viral Load
+-- Runs daily at 8 AM - checks all patients for overdue VL tests (>180 days)
 -- ============================================================================
 
 DROP EVENT IF EXISTS `evt_daily_check_overdue_vl`//
@@ -24,6 +25,7 @@ END//
 
 -- ============================================================================
 -- EVENT: Daily Check Missed Appointments
+-- Runs daily at 8 AM - marks appointments as missed if >14 days overdue
 -- ============================================================================
 
 DROP EVENT IF EXISTS `evt_daily_check_missed_appointments`//
@@ -38,6 +40,7 @@ END//
 
 -- ============================================================================
 -- EVENT: Daily Check Missed Refills
+-- Runs daily at 8 AM - creates alerts for patients with missed medication refills
 -- ============================================================================
 
 DROP EVENT IF EXISTS `evt_daily_check_missed_refills`//
@@ -52,6 +55,7 @@ END//
 
 -- ============================================================================
 -- EVENT: Weekly Adherence Computation
+-- Runs weekly at 9 AM - computes adherence for all active patients
 -- ============================================================================
 
 DROP EVENT IF EXISTS `evt_weekly_compute_adherence`//
@@ -87,6 +91,7 @@ END//
 
 -- ============================================================================
 -- EVENT: Daily Update LTFU Status
+-- Runs daily at 7 AM - marks patients as LTFU if inactive >90 days
 -- ============================================================================
 
 DROP EVENT IF EXISTS `evt_daily_update_ltfu`//

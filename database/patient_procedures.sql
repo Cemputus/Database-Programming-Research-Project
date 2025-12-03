@@ -1,12 +1,14 @@
 -- ============================================================================
 -- PATIENT SELF-SERVICE STORED PROCEDURES
--- Allows patients to query their own data using patient_code
+-- Patients access their own data using patient_code (not patient_id)
+-- All procedures validate patient_code and return patient-specific data only
 -- ============================================================================
 
 DELIMITER //
 
 -- ============================================================================
 -- SP: Get Patient Dashboard Data
+-- Returns complete patient dashboard with next appointment, last VL, adherence, etc.
 -- ============================================================================
 
 DROP PROCEDURE IF EXISTS `sp_patient_dashboard`//
@@ -16,7 +18,6 @@ CREATE PROCEDURE `sp_patient_dashboard`(
 BEGIN
     DECLARE v_patient_id INT UNSIGNED;
     
-    -- Get patient_id from patient_code
     SELECT patient_id INTO v_patient_id
     FROM patient
     WHERE patient_code = p_patient_code;
@@ -26,13 +27,13 @@ BEGIN
         SET MESSAGE_TEXT = 'Patient not found';
     END IF;
     
-    -- Return dashboard data
     SELECT * FROM v_patient_dashboard
     WHERE patient_code = p_patient_code;
 END//
 
 -- ============================================================================
 -- SP: Get Patient Visit History
+-- Returns clinical visit history (most recent first, limited by p_limit)
 -- ============================================================================
 
 DROP PROCEDURE IF EXISTS `sp_patient_visits`//
@@ -43,7 +44,6 @@ CREATE PROCEDURE `sp_patient_visits`(
 BEGIN
     DECLARE v_patient_id INT UNSIGNED;
     
-    -- Get patient_id from patient_code
     SELECT patient_id INTO v_patient_id
     FROM patient
     WHERE patient_code = p_patient_code;
@@ -53,7 +53,6 @@ BEGIN
         SET MESSAGE_TEXT = 'Patient not found';
     END IF;
     
-    -- Return visit history
     SELECT * FROM v_patient_visit_history
     WHERE patient_id = v_patient_id
     LIMIT p_limit;
@@ -61,6 +60,7 @@ END//
 
 -- ============================================================================
 -- SP: Get Patient Lab Test History
+-- Returns lab test results (optionally filtered by test_type like 'Viral Load')
 -- ============================================================================
 
 DROP PROCEDURE IF EXISTS `sp_patient_lab_tests`//
@@ -72,7 +72,6 @@ CREATE PROCEDURE `sp_patient_lab_tests`(
 BEGIN
     DECLARE v_patient_id INT UNSIGNED;
     
-    -- Get patient_id from patient_code
     SELECT patient_id INTO v_patient_id
     FROM patient
     WHERE patient_code = p_patient_code;
@@ -82,7 +81,6 @@ BEGIN
         SET MESSAGE_TEXT = 'Patient not found';
     END IF;
     
-    -- Return lab test history
     SELECT * FROM v_patient_lab_history
     WHERE patient_id = v_patient_id
       AND (p_test_type IS NULL OR test_type = p_test_type)
@@ -91,6 +89,7 @@ END//
 
 -- ============================================================================
 -- SP: Get Patient Medication History
+-- Returns medication dispensing records with refill status
 -- ============================================================================
 
 DROP PROCEDURE IF EXISTS `sp_patient_medications`//
@@ -101,7 +100,6 @@ CREATE PROCEDURE `sp_patient_medications`(
 BEGIN
     DECLARE v_patient_id INT UNSIGNED;
     
-    -- Get patient_id from patient_code
     SELECT patient_id INTO v_patient_id
     FROM patient
     WHERE patient_code = p_patient_code;
@@ -111,7 +109,6 @@ BEGIN
         SET MESSAGE_TEXT = 'Patient not found';
     END IF;
     
-    -- Return medication history
     SELECT * FROM v_patient_medication_history
     WHERE patient_id = v_patient_id
     LIMIT p_limit;
@@ -119,6 +116,7 @@ END//
 
 -- ============================================================================
 -- SP: Get Patient Appointments
+-- Returns appointments (optionally filtered by status like 'Scheduled')
 -- ============================================================================
 
 DROP PROCEDURE IF EXISTS `sp_patient_appointments`//
@@ -130,7 +128,6 @@ CREATE PROCEDURE `sp_patient_appointments`(
 BEGIN
     DECLARE v_patient_id INT UNSIGNED;
     
-    -- Get patient_id from patient_code
     SELECT patient_id INTO v_patient_id
     FROM patient
     WHERE patient_code = p_patient_code;
@@ -140,7 +137,6 @@ BEGIN
         SET MESSAGE_TEXT = 'Patient not found';
     END IF;
     
-    -- Return appointments
     SELECT * FROM v_patient_appointments
     WHERE patient_id = v_patient_id
       AND (p_status IS NULL OR status = p_status)
@@ -150,6 +146,7 @@ END//
 
 -- ============================================================================
 -- SP: Get Patient Adherence History
+-- Returns adherence assessment records with percentages and methods
 -- ============================================================================
 
 DROP PROCEDURE IF EXISTS `sp_patient_adherence`//
@@ -160,7 +157,6 @@ CREATE PROCEDURE `sp_patient_adherence`(
 BEGIN
     DECLARE v_patient_id INT UNSIGNED;
     
-    -- Get patient_id from patient_code
     SELECT patient_id INTO v_patient_id
     FROM patient
     WHERE patient_code = p_patient_code;
@@ -170,7 +166,6 @@ BEGIN
         SET MESSAGE_TEXT = 'Patient not found';
     END IF;
     
-    -- Return adherence history
     SELECT * FROM v_patient_adherence_history
     WHERE patient_id = v_patient_id
     LIMIT p_limit;
@@ -178,6 +173,7 @@ END//
 
 -- ============================================================================
 -- SP: Get Patient Alerts
+-- Returns alerts (p_resolved_only=FALSE for active, TRUE for resolved)
 -- ============================================================================
 
 DROP PROCEDURE IF EXISTS `sp_patient_alerts`//
@@ -189,7 +185,6 @@ CREATE PROCEDURE `sp_patient_alerts`(
 BEGIN
     DECLARE v_patient_id INT UNSIGNED;
     
-    -- Get patient_id from patient_code
     SELECT patient_id INTO v_patient_id
     FROM patient
     WHERE patient_code = p_patient_code;
@@ -199,7 +194,6 @@ BEGIN
         SET MESSAGE_TEXT = 'Patient not found';
     END IF;
     
-    -- Return alerts
     SELECT * FROM v_patient_alerts
     WHERE patient_id = v_patient_id
       AND (p_resolved_only = FALSE OR is_resolved = TRUE)
@@ -208,6 +202,8 @@ END//
 
 -- ============================================================================
 -- SP: Get Patient Progress Timeline
+-- Returns chronological timeline of all care events (enrollment, visits, tests, etc.)
+-- Can filter by date range (p_start_date, p_end_date)
 -- ============================================================================
 
 DROP PROCEDURE IF EXISTS `sp_patient_progress_timeline`//
@@ -220,7 +216,6 @@ CREATE PROCEDURE `sp_patient_progress_timeline`(
 BEGIN
     DECLARE v_patient_id INT UNSIGNED;
     
-    -- Get patient_id from patient_code
     SELECT patient_id INTO v_patient_id
     FROM patient
     WHERE patient_code = p_patient_code;
@@ -230,7 +225,6 @@ BEGIN
         SET MESSAGE_TEXT = 'Patient not found';
     END IF;
     
-    -- Return progress timeline
     SELECT * FROM v_patient_progress_timeline
     WHERE patient_id = v_patient_id
       AND (p_start_date IS NULL OR event_date >= p_start_date)
@@ -240,6 +234,7 @@ END//
 
 -- ============================================================================
 -- SP: Get Patient Next Appointment
+-- Returns next upcoming scheduled appointment (if any)
 -- ============================================================================
 
 DROP PROCEDURE IF EXISTS `sp_patient_next_appointment`//
@@ -280,6 +275,7 @@ END//
 
 -- ============================================================================
 -- SP: Get Patient Summary Stats
+-- Returns summary statistics: total visits, tests, dispenses, average adherence, etc.
 -- ============================================================================
 
 DROP PROCEDURE IF EXISTS `sp_patient_summary_stats`//
