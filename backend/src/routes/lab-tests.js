@@ -5,6 +5,7 @@
 
 const { Router } = require('express');
 const { PrismaClient } = require('@prisma/client');
+const { authorize } = require('../middleware/auth');
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -76,8 +77,8 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// POST /api/lab-tests - Create new lab test
-router.post('/', async (req, res) => {
+// POST /api/lab-tests - Create new lab test (requires lab or clinician)
+router.post('/', authorize('db_lab', 'db_clinician', 'db_admin'), async (req, res) => {
   try {
     const labTest = await prisma.labTest.create({
       data: {
@@ -105,8 +106,8 @@ router.post('/', async (req, res) => {
   }
 });
 
-// PUT /api/lab-tests/:id - Update lab test (e.g., update results)
-router.put('/:id', async (req, res) => {
+// PUT /api/lab-tests/:id - Update lab test (requires lab or clinician)
+router.put('/:id', authorize('db_lab', 'db_clinician', 'db_admin'), async (req, res) => {
   try {
     const labTest = await prisma.labTest.update({
       where: { labTestId: parseInt(req.params.id) },
