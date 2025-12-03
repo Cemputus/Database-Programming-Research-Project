@@ -1,6 +1,5 @@
 -- ============================================================================
 -- PATIENT SELF-SERVICE STORED PROCEDURES
--- HIV Patient Care & Treatment Monitoring System
 -- Allows patients to query their own data using patient_code
 -- ============================================================================
 

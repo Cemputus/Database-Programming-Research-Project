@@ -1,149 +1,62 @@
 -- ============================================================================
 -- HIV Patient Care & Treatment Monitoring System
 -- Mukono General Hospital ART Clinic
--- Database Schema (MySQL 8.0+) 
--- ============================================================================
---
--- This file creates all the database tables for the HIV care system.
--- Think of it as building the foundation - we're setting up where all the
--- patient and staff information will be stored.
---
--- Before we start creating tables, we need to do some housekeeping:
--- Turn off foreign key checks temporarily (so we can create tables in any order)
--- Set up the database to work properly with our data
+-- Database Schema (MySQL 8.0+)
 -- ============================================================================
 
-SET FOREIGN_KEY_CHECKS = 0;  -- Let's create tables without worrying about relationships first
-SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";  -- Allow zero values in auto-increment columns
-SET AUTOCOMMIT = 0;  -- We'll commit everything at the end
-START TRANSACTION;  -- Start a transaction so we can rollback if something goes wrong
-SET time_zone = "+00:00";  -- Use UTC timezone for consistency
+SET FOREIGN_KEY_CHECKS = 0;
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+SET AUTOCOMMIT = 0;
+START TRANSACTION;
+SET time_zone = "+00:00";
 
 -- ============================================================================
 -- SUPER TYPE: person (Generalization)
--- ============================================================================
---
--- This is the "parent" table that holds basic information about ANY person
--- in our system - whether they're a patient or staff member.
--- 
--- Why do we do this? Well, both patients and staff have names, dates of birth,
--- phone numbers, and addresses. Instead of duplicating this information in
--- two separate tables, we store it once here and both patients and staff
--- "inherit" from this table. This is called "generalization" in database design.
---
--- Think of it like a family tree - person is the grandparent, and patient
--- and staff are the children who inherit common traits.
+-- Base table for all persons (patients and staff inherit from this)
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS `person` (
-  -- Every person gets a unique ID number that the system generates automatically
   `person_id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  
-  -- National ID from Uganda's NIRA system. Format: CF12345-67890-1
-  -- This MUST be unique - no two people can have the same NIN
   `nin` VARCHAR(20) NOT NULL UNIQUE COMMENT 'National Identification Number (NIRA-issued: CFxxxxx-xxxxx...)',
-  
-  -- Basic name information - first and last name are required
-  `first_name` VARCHAR(100) NOT NULL,  -- Person's first/given name
-  `last_name` VARCHAR(100) NOT NULL,   -- Person's surname/family name
-  
-  -- Many Ugandans have a third name (local or tribal name) - this is optional
+  `first_name` VARCHAR(100) NOT NULL,
+  `last_name` VARCHAR(100) NOT NULL,
   `other_name` VARCHAR(100) DEFAULT NULL COMMENT 'Optional local/tribal name',
-  
-  -- Gender/sex - we use M, F, or Other to match Uganda's HMIS reporting standards
   `sex` ENUM('M', 'F', 'Other') NOT NULL COMMENT 'Gender - matches HMIS classification',
-  
-  -- Date of birth - needed to calculate age and for reporting
   `date_of_birth` DATE NOT NULL,
-  
-  -- Contact information - phone number in Uganda format (+256...)
   `phone_contact` VARCHAR(20) DEFAULT NULL COMMENT 'MTN/Airtel phone - Uganda phone formats',
-  
-  -- Location information - Uganda uses a hierarchy: District → Subcounty → Parish → Village
-  -- This helps with community tracing and HMIS reporting
   `district` VARCHAR(100) NOT NULL COMMENT 'District of residence (e.g., Mukono, Kampala)',
-  `subcounty` VARCHAR(100) NOT NULL COMMENT 'Used in HMIS reporting',
-  `parish` VARCHAR(100) DEFAULT NULL COMMENT 'Required for community tracing - helps find patients',
+  `subcounty` VARCHAR(100) NOT NULL COMMENT 'Used in HMIS',
+  `parish` VARCHAR(100) DEFAULT NULL COMMENT 'Required for community tracing',
   `village` VARCHAR(100) DEFAULT NULL COMMENT 'Village/zone (e.g., Kigombya)',
-  
-  -- When was this person record created? System tracks this automatically
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  
-  -- Primary key: This is the main way we identify each person
   PRIMARY KEY (`person_id`),
-  
-  -- Indexes help the database find records faster
-  -- We'll search by NIN a lot, so make it unique and indexed
   UNIQUE KEY `uk_nin` (`nin`),
-  KEY `idx_district` (`district`),  -- Quick lookups by district
-  KEY `idx_name` (`first_name`, `last_name`)  -- Quick lookups by name
+  KEY `idx_district` (`district`),
+  KEY `idx_name` (`first_name`, `last_name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================================
 -- SUB TYPE: patient (Specialization from person)
--- ============================================================================
---
--- This table stores information specific to patients (people receiving HIV care).
--- Remember, patients "inherit" from the person table - so they have all the
--- basic info (name, DOB, address) from there, PLUS the patient-specific
--- information stored here.
---
--- This is called "specialization" - we're taking the general "person" concept
--- and making it more specific for patients.
+-- Patient-specific information - inherits from person table
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS `patient` (
-  -- Each patient gets their own unique ID
   `patient_id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  
-  -- This links back to the person table - every patient IS a person first
-  -- This is the "inheritance" connection we talked about
   `person_id` INT UNSIGNED NOT NULL,
-  
-  -- The hospital's unique code for this patient (like MGH/ART/0001)
-  -- Patients use this code to access their own data
   `patient_code` VARCHAR(50) NOT NULL UNIQUE COMMENT 'Hospital-specific ART ID (e.g., MGH/ART/0001)',
-  
-  -- When did this patient first register at the HIV clinic?
   `enrollment_date` DATE NOT NULL COMMENT 'First registration at HIV clinic',
-  
-  -- When did they actually start taking ART medication?
-  -- This might be different from enrollment (sometimes patients enroll but don't start immediately)
   `art_start_date` DATE DEFAULT NULL COMMENT 'When ART started',
-  
-  -- Current status of the patient - this is "disjoint categorization" meaning
-  -- a patient can only be ONE of these at a time (not multiple)
-  -- Active = currently receiving care
-  -- Transferred-Out = moved to another facility
-  -- LTFU = Lost to Follow-Up (haven't been seen in 90+ days)
-  -- Dead = patient has passed away
   `current_status` ENUM('Active', 'Transferred-Out', 'LTFU', 'Dead') NOT NULL DEFAULT 'Active' COMMENT 'Ugandan HMIS standard statuses - Disjoint Categorization',
-  
-  -- Emergency contact information - who should we call if needed?
   `next_of_kin` VARCHAR(150) DEFAULT NULL COMMENT 'NOK name',
   `nok_phone` VARCHAR(20) DEFAULT NULL COMMENT 'NOK phone',
-  
-  -- Support systems - many patients are part of Community ART Groups (CAGs)
-  -- where they help each other with adherence
   `support_group` VARCHAR(150) DEFAULT NULL COMMENT 'e.g., Community ART group (CAG)',
-  
-  -- Treatment partner - someone who helps the patient remember to take medication
   `treatment_partner` VARCHAR(150) DEFAULT NULL COMMENT 'Person helping with adherence',
-  
-  -- Primary key and indexes for fast lookups
   PRIMARY KEY (`patient_id`),
-  UNIQUE KEY `uk_patient_code` (`patient_code`),  -- Patient codes must be unique
-  UNIQUE KEY `uk_person_patient` (`person_id`),  -- One person = one patient record
-  KEY `idx_status` (`current_status`),  -- Quick lookups by status (find all Active patients)
-  KEY `idx_enrollment` (`enrollment_date`),  -- Quick lookups by enrollment date
-  
-  -- Foreign key constraint: This patient MUST have a corresponding person record
-  -- We use RESTRICT on delete - can't delete a person if they're a patient
-  -- CASCADE on update - if person_id changes, update this automatically
+  UNIQUE KEY `uk_patient_code` (`patient_code`),
+  UNIQUE KEY `uk_person_patient` (`person_id`),
+  KEY `idx_status` (`current_status`),
+  KEY `idx_enrollment` (`enrollment_date`),
   CONSTRAINT `fk_patient_person` FOREIGN KEY (`person_id`) REFERENCES `person` (`person_id`) ON DELETE RESTRICT ON UPDATE CASCADE,
-  
-  -- Business rule: ART start date can't be before enrollment date
-  -- (You can't start treatment before you enroll!)
   CONSTRAINT `chk_art_after_enrollment` CHECK (`art_start_date` IS NULL OR `art_start_date` >= `enrollment_date`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

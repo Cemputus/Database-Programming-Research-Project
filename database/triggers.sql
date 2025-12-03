@@ -2,51 +2,20 @@
 -- TRIGGERS
 -- HIV Patient Care & Treatment Monitoring System
 -- ============================================================================
---
--- Triggers are like automatic actions that happen when something changes in the database.
--- Think of them like motion-activated lights - when someone walks in (data changes),
--- the light turns on automatically (trigger fires).
---
--- We use triggers to:
--- - Automatically create alerts when something important happens
--- - Keep an audit trail of who changed what and when
--- - Make sure data stays consistent
---
--- The beauty of triggers: They happen automatically, so we don't forget to do these things!
--- ============================================================================
 
-DELIMITER //  -- Need to change delimiter for multi-line trigger code
+DELIMITER //
 
 -- ============================================================================
 -- TRIGGER: High Viral Load Alert on Lab Test Insert
--- ============================================================================
---
--- What this does:
--- When a new lab test result is saved, this trigger automatically checks if the
--- viral load is too high. If it is, it immediately creates an alert so staff
--- know to take action.
---
--- Why this matters:
--- A high viral load (over 1000 copies/mL) means the medication isn't working well.
--- This could mean:
--- - The patient isn't taking their medication regularly (poor adherence)
--- - The virus has become resistant to the current medication
--- - The medication needs to be changed
---
--- By creating an alert automatically, we make sure nothing falls through the cracks.
--- Staff will see the alert and can take action right away.
---
--- When it fires:
--- Right after a new lab test record is inserted into the database
+-- Creates alert when VL result > 1000 copies/mL
 -- ============================================================================
 
-DROP TRIGGER IF EXISTS `trg_lab_test_high_vl_alert`//  -- Remove old version if exists
+DROP TRIGGER IF EXISTS `trg_lab_test_high_vl_alert`//
 CREATE TRIGGER `trg_lab_test_high_vl_alert`
-AFTER INSERT ON `lab_test`  -- This runs AFTER we save a new lab test
-FOR EACH ROW  -- Check every new record
+AFTER INSERT ON `lab_test`
+FOR EACH ROW
 BEGIN
-    -- Check if this is a viral load test that's been completed
-    -- AND if the result is over 1000 copies/mL (that's considered high)
+    -- Check if VL test completed and result > 1000
     IF NEW.test_type = 'Viral Load' 
        AND NEW.result_status = 'Completed' 
        AND NEW.result_numeric IS NOT NULL 
@@ -70,6 +39,7 @@ END//
 
 -- ============================================================================
 -- TRIGGER: High Viral Load Alert on Lab Test Update
+-- Creates alert when VL result updated to > 1000 copies/mL
 -- ============================================================================
 
 DROP TRIGGER IF EXISTS `trg_lab_test_high_vl_alert_update`//
@@ -101,6 +71,7 @@ END//
 
 -- ============================================================================
 -- TRIGGER: Missed Appointment Alert
+-- Creates alert when appointment status changes to Missed
 -- ============================================================================
 
 DROP TRIGGER IF EXISTS `trg_appointment_missed_alert`//
@@ -128,6 +99,7 @@ END//
 
 -- ============================================================================
 -- TRIGGER: Audit Log for Patient Table
+-- Logs patient record changes to audit_log
 -- ============================================================================
 
 DROP TRIGGER IF EXISTS `trg_patient_audit_insert`//
@@ -168,6 +140,7 @@ END//
 
 -- ============================================================================
 -- TRIGGER: Audit Log for Visit Table
+-- Logs visit record creation to audit_log
 -- ============================================================================
 
 DROP TRIGGER IF EXISTS `trg_visit_audit_insert`//
@@ -190,6 +163,7 @@ END//
 
 -- ============================================================================
 -- TRIGGER: Audit Log for Lab Test Table
+-- Logs lab test changes to audit_log
 -- ============================================================================
 
 DROP TRIGGER IF EXISTS `trg_lab_test_audit_insert`//
@@ -241,6 +215,7 @@ END//
 
 -- ============================================================================
 -- TRIGGER: Audit Log for Dispense Table
+-- Logs dispense record creation to audit_log
 -- ============================================================================
 
 DROP TRIGGER IF EXISTS `trg_dispense_audit_insert`//
@@ -263,6 +238,7 @@ END//
 
 -- ============================================================================
 -- TRIGGER: Low Adherence Alert
+-- Creates alert when adherence < 85%
 -- ============================================================================
 
 DROP TRIGGER IF EXISTS `trg_adherence_low_alert`//
