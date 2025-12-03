@@ -230,11 +230,6 @@ LEFT JOIN (
 WHERE p.current_status = 'Active';
 
 -- ============================================================================
--- VIEW: Staff with Roles
--- Staff information with all assigned system roles (overlapping specialization)
--- ============================================================================
-
--- ============================================================================
 -- VIEW: CAG Summary
 -- Summary of all CAGs with member counts and status
 -- ============================================================================
