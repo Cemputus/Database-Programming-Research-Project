@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS `person` (
   `first_name` VARCHAR(100) NOT NULL,
   `last_name` VARCHAR(100) NOT NULL,
   `other_name` VARCHAR(100) DEFAULT NULL COMMENT 'Optional third name (local/tribal)',
-  `sex` ENUM('M', 'F', 'Other') NOT NULL COMMENT 'Gender - matches HMIS standards',
+  `sex` ENUM('M', 'F') NOT NULL COMMENT 'Gender - Male or Female only',
   `date_of_birth` DATE NOT NULL,
   `phone_contact` VARCHAR(20) DEFAULT NULL COMMENT 'Phone number (Uganda format: +256...)',
   `district` VARCHAR(100) NOT NULL COMMENT 'District (e.g., Mukono, Kampala)',
@@ -59,7 +59,7 @@ CREATE TABLE IF NOT EXISTS `patient` (
   `current_status` ENUM('Active', 'Transferred-Out', 'LTFU', 'Dead') NOT NULL DEFAULT 'Active' COMMENT 'Patient status - one value only (disjoint)',
   `next_of_kin` VARCHAR(150) DEFAULT NULL COMMENT 'NOK name',
   `nok_phone` VARCHAR(20) DEFAULT NULL COMMENT 'NOK phone',
-  `support_group` VARCHAR(150) DEFAULT NULL COMMENT 'e.g., Community ART group (CAG)',
+  `support_group` VARCHAR(150) DEFAULT NULL COMMENT 'Legacy field - use patient_cag table for CAG membership',
   `treatment_partner` VARCHAR(150) DEFAULT NULL COMMENT 'Person helping with adherence',
   PRIMARY KEY (`patient_id`),
   UNIQUE KEY `uk_patient_code` (`patient_code`),
@@ -262,6 +262,84 @@ CREATE TABLE IF NOT EXISTS `counseling_session` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================================
+-- CAG (COMMUNITY ART GROUP) TABLE
+-- Ugandan MOH-approved community-based ART delivery model
+-- Stable HIV patients form small groups in villages/parishes
+-- Members rotate to pick up ART refills and distribute to others
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS `cag` (
+  `cag_id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `cag_name` VARCHAR(150) NOT NULL UNIQUE COMMENT 'CAG name (e.g., Kigombya CAG)',
+  `district` VARCHAR(100) NOT NULL COMMENT 'District where CAG is located',
+  `subcounty` VARCHAR(100) NOT NULL COMMENT 'Subcounty',
+  `parish` VARCHAR(100) NOT NULL COMMENT 'Parish',
+  `village` VARCHAR(100) NOT NULL COMMENT 'Village where CAG operates',
+  `formation_date` DATE NOT NULL COMMENT 'When CAG was formed',
+  `coordinator_patient_id` INT UNSIGNED DEFAULT NULL COMMENT 'Patient who coordinates the CAG',
+  `facility_staff_id` INT UNSIGNED DEFAULT NULL COMMENT 'Staff member who supervises CAG',
+  `status` ENUM('Active', 'Inactive', 'Dissolved') NOT NULL DEFAULT 'Active' COMMENT 'CAG status',
+  `max_members` TINYINT UNSIGNED DEFAULT 6 COMMENT 'Maximum members (typically 4-6)',
+  `notes` TEXT DEFAULT NULL COMMENT 'Additional notes about the CAG',
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`cag_id`),
+  UNIQUE KEY `uk_cag_name` (`cag_name`),
+  KEY `idx_cag_location` (`district`, `subcounty`, `parish`, `village`),
+  KEY `idx_cag_status` (`status`),
+  CONSTRAINT `fk_cag_coordinator` FOREIGN KEY (`coordinator_patient_id`) REFERENCES `patient` (`patient_id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `fk_cag_staff` FOREIGN KEY (`facility_staff_id`) REFERENCES `staff` (`staff_id`) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================================================
+-- PATIENT_CAG TABLE
+-- Junction table linking patients to CAGs (many-to-many)
+-- Tracks patient membership in Community ART Groups
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS `patient_cag` (
+  `patient_cag_id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `patient_id` INT UNSIGNED NOT NULL,
+  `cag_id` INT UNSIGNED NOT NULL,
+  `join_date` DATE NOT NULL COMMENT 'When patient joined the CAG',
+  `role_in_cag` ENUM('Member', 'Coordinator', 'Deputy Coordinator') NOT NULL DEFAULT 'Member' COMMENT 'Patient role in CAG',
+  `is_active` BOOLEAN NOT NULL DEFAULT TRUE COMMENT 'Whether patient is currently active in CAG',
+  `exit_date` DATE DEFAULT NULL COMMENT 'When patient left the CAG',
+  `exit_reason` VARCHAR(200) DEFAULT NULL COMMENT 'Reason for leaving (e.g., Transferred, LTFU, Death)',
+  `notes` TEXT DEFAULT NULL,
+  PRIMARY KEY (`patient_cag_id`),
+  UNIQUE KEY `uk_patient_cag_active` (`patient_id`, `cag_id`, `is_active`),
+  KEY `idx_cag_patients` (`cag_id`, `is_active`),
+  KEY `idx_patient_cags` (`patient_id`, `is_active`),
+  CONSTRAINT `fk_patient_cag_patient` FOREIGN KEY (`patient_id`) REFERENCES `patient` (`patient_id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT `fk_patient_cag_cag` FOREIGN KEY (`cag_id`) REFERENCES `cag` (`cag_id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT `chk_exit_date_after_join` CHECK (`exit_date` IS NULL OR `exit_date` >= `join_date`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================================================
+-- CAG_ROTATION TABLE
+-- Tracks rotation of CAG members picking up refills for the group
+-- Records who picked up medications for which patients in the CAG
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS `cag_rotation` (
+  `rotation_id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `cag_id` INT UNSIGNED NOT NULL,
+  `pickup_patient_id` INT UNSIGNED NOT NULL COMMENT 'Patient who picked up medications',
+  `rotation_date` DATE NOT NULL COMMENT 'Date of pickup',
+  `dispense_id` BIGINT UNSIGNED DEFAULT NULL COMMENT 'Reference to dispense record',
+  `patients_served` TINYINT UNSIGNED NOT NULL COMMENT 'Number of patients served in this rotation',
+  `notes` TEXT DEFAULT NULL COMMENT 'Notes about the rotation',
+  PRIMARY KEY (`rotation_id`),
+  KEY `idx_rotation_date` (`rotation_date`),
+  KEY `idx_cag_rotation` (`cag_id`, `rotation_date`),
+  KEY `idx_pickup_patient` (`pickup_patient_id`),
+  CONSTRAINT `fk_rotation_cag` FOREIGN KEY (`cag_id`) REFERENCES `cag` (`cag_id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT `fk_rotation_patient` FOREIGN KEY (`pickup_patient_id`) REFERENCES `patient` (`patient_id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT `fk_rotation_dispense` FOREIGN KEY (`dispense_id`) REFERENCES `dispense` (`dispense_id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `chk_rotation_date_not_future` CHECK (`rotation_date` <= CURDATE())
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================================================
 -- ADHERENCE_LOG TABLE
 -- Tracks medication adherence assessments
 -- Methods: Pill Count, Pharmacy Refill, Self Report, CAG Report, Computed
@@ -336,6 +414,9 @@ CREATE INDEX `idx_visit_patient_date` ON `visit` (`patient_id`, `visit_date` DES
 CREATE INDEX `idx_lab_test_patient_type_date` ON `lab_test` (`patient_id`, `test_type`, `test_date` DESC);
 CREATE INDEX `idx_dispense_patient_date` ON `dispense` (`patient_id`, `dispense_date` DESC);
 CREATE INDEX `idx_appointment_patient_status` ON `appointment` (`patient_id`, `status`, `scheduled_date`);
+CREATE INDEX `idx_cag_formation_date` ON `cag` (`formation_date`);
+CREATE INDEX `idx_patient_cag_join_date` ON `patient_cag` (`join_date`, `is_active`);
+CREATE INDEX `idx_rotation_cag_date` ON `cag_rotation` (`cag_id`, `rotation_date` DESC);
 
 SET FOREIGN_KEY_CHECKS = 1;
 COMMIT;

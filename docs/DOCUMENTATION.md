@@ -124,7 +124,7 @@ The database uses an **Enhanced Entity Relationship (EER) Model** with:
 | first_name | VARCHAR(100) | Person's first name |
 | last_name | VARCHAR(100) | Person's surname |
 | other_name | VARCHAR(100) | Optional local/tribal name |
-| sex | ENUM('M','F','Other') | Gender - matches HMIS classification |
+| sex | ENUM('M','F') | Gender - Male or Female only |
 | date_of_birth | DATE | Date of birth |
 | phone_contact | VARCHAR(20) | MTN/Airtel phone |
 | district | VARCHAR(100) | District of residence |

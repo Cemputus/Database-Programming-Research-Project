@@ -13,7 +13,7 @@ erDiagram
         string middle_name
         string last_name
         date date_of_birth
-        enum gender "Male, Female, Other"
+        enum gender "Male, Female"
         string phone_number
         string email
         string district "Uganda District"

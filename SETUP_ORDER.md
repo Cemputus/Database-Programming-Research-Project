@@ -20,7 +20,7 @@ USE hiv_patient_care;
 **Why first?** This creates all the tables - the foundation of everything else.
 
 **What it does:**
-- Creates all 14 tables (person, patient, staff, visit, lab_test, etc.)
+- Creates all 17 tables (person, patient, staff, visit, lab_test, cag, patient_cag, cag_rotation, etc.)
 - Sets up relationships between tables (foreign keys)
 - Creates indexes for performance
 - Sets up constraints and business rules
@@ -46,7 +46,7 @@ mysql -u root -p hiv_patient_care < database/schema.sql
 
 **Command:**
 ```bash
-mysql -u root -p hiv_care_monitoring < database/stored_procedures.sql
+mysql -u root -p hiv_patient_care < database/stored_procedures.sql
 ```
 
 ---
@@ -63,7 +63,7 @@ mysql -u root -p hiv_care_monitoring < database/stored_procedures.sql
 
 **Command:**
 ```bash
-mysql -u root -p hiv_care_monitoring < database/triggers.sql
+mysql -u root -p hiv_patient_care < database/triggers.sql
 ```
 
 ---
@@ -81,7 +81,7 @@ mysql -u root -p hiv_care_monitoring < database/triggers.sql
 
 **Command:**
 ```bash
-mysql -u root -p hiv_care_monitoring < database/views.sql
+mysql -u root -p hiv_patient_care < database/views.sql
 ```
 
 ---
@@ -101,7 +101,7 @@ mysql -u root -p hiv_care_monitoring < database/views.sql
 
 **Command:**
 ```bash
-mysql -u root -p hiv_care_monitoring < database/patient_views.sql
+mysql -u root -p hiv_patient_care < database/patient_views.sql
 ```
 
 ---
@@ -122,15 +122,15 @@ mysql -u root -p hiv_care_monitoring < database/patient_views.sql
 
 **Command:**
 ```bash
-mysql -u root -p hiv_care_monitoring < database/patient_procedures.sql
+mysql -u root -p hiv_patient_care < database/patient_procedures.sql
 ```
 
 ---
 
-### Step 8: Run Security Setup
+### Step 9: Run Security Setup
 **File**: `database/security.sql`
 
-**Why seventh?** Security roles need tables to exist first.
+**Why ninth?** Security roles need tables to exist first.
 
 **What it does:**
 - Creates database roles (db_admin, db_clinician, db_lab, db_pharmacy, db_counselor, db_readonly, db_patient)
@@ -139,15 +139,15 @@ mysql -u root -p hiv_care_monitoring < database/patient_procedures.sql
 
 **Command:**
 ```bash
-mysql -u root -p hiv_care_monitoring < database/security.sql
+mysql -u root -p hiv_patient_care < database/security.sql
 ```
 
 ---
 
-### Step 9: Run Scheduled Events
+### Step 10: Run Scheduled Events
 **File**: `database/events.sql`
 
-**Why eighth?** Events call the stored procedures we created earlier.
+**Why tenth?** Events call the stored procedures we created earlier.
 
 **What it does:**
 - Sets up daily checks for overdue viral loads
@@ -158,12 +158,12 @@ mysql -u root -p hiv_care_monitoring < database/security.sql
 
 **Command:**
 ```bash
-mysql -u root -p hiv_care_monitoring < database/events.sql
+mysql -u root -p hiv_patient_care < database/events.sql
 ```
 
 ---
 
-### Step 10: Run Seed Data (Optional)
+### Step 11: Run Seed Data (Optional)
 **File**: `database/seed_data.sql`
 
 **Why last?** This inserts sample data, so everything else must exist first.
@@ -180,7 +180,7 @@ mysql -u root -p hiv_care_monitoring < database/events.sql
 
 **Command:**
 ```bash
-mysql -u root -p hiv_care_monitoring < database/seed_data.sql
+mysql -u root -p hiv_patient_care < database/seed_data.sql
 ```
 
 **Note:** Only run this if you want sample/test data. Skip it for production!
@@ -194,36 +194,38 @@ You can create a script to run everything in order:
 ### For Windows (PowerShell):
 ```powershell
 # Create database
-mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS hiv_care_monitoring;"
+mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS hiv_patient_care;"
 
 # Run files in order
 mysql -u root -p hiv_patient_care < database/schema.sql
-mysql -u root -p hiv_care_monitoring < database/stored_procedures.sql
-mysql -u root -p hiv_care_monitoring < database/triggers.sql
-mysql -u root -p hiv_care_monitoring < database/views.sql
-mysql -u root -p hiv_care_monitoring < database/patient_views.sql
-mysql -u root -p hiv_care_monitoring < database/patient_procedures.sql
-mysql -u root -p hiv_care_monitoring < database/security.sql
-mysql -u root -p hiv_care_monitoring < database/events.sql
-# mysql -u root -p hiv_care_monitoring < database/seed_data.sql  # Optional
+mysql -u root -p hiv_patient_care < database/stored_procedures.sql
+mysql -u root -p hiv_patient_care < database/triggers.sql
+mysql -u root -p hiv_patient_care < database/views.sql
+mysql -u root -p hiv_patient_care < database/patient_views.sql
+mysql -u root -p hiv_patient_care < database/patient_procedures.sql
+mysql -u root -p hiv_patient_care < database/cag_procedures.sql
+mysql -u root -p hiv_patient_care < database/security.sql
+mysql -u root -p hiv_patient_care < database/events.sql
+# mysql -u root -p hiv_patient_care < database/seed_data.sql  # Optional
 ```
 
 ### For Linux/Mac (Bash):
 ```bash
 #!/bin/bash
 # Create database
-mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS hiv_care_monitoring;"
+mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS hiv_patient_care;"
 
 # Run files in order
 mysql -u root -p hiv_patient_care < database/schema.sql
-mysql -u root -p hiv_care_monitoring < database/stored_procedures.sql
-mysql -u root -p hiv_care_monitoring < database/triggers.sql
-mysql -u root -p hiv_care_monitoring < database/views.sql
-mysql -u root -p hiv_care_monitoring < database/patient_views.sql
-mysql -u root -p hiv_care_monitoring < database/patient_procedures.sql
-mysql -u root -p hiv_care_monitoring < database/security.sql
-mysql -u root -p hiv_care_monitoring < database/events.sql
-# mysql -u root -p hiv_care_monitoring < database/seed_data.sql  # Optional
+mysql -u root -p hiv_patient_care < database/stored_procedures.sql
+mysql -u root -p hiv_patient_care < database/triggers.sql
+mysql -u root -p hiv_patient_care < database/views.sql
+mysql -u root -p hiv_patient_care < database/patient_views.sql
+mysql -u root -p hiv_patient_care < database/patient_procedures.sql
+mysql -u root -p hiv_patient_care < database/cag_procedures.sql
+mysql -u root -p hiv_patient_care < database/security.sql
+mysql -u root -p hiv_patient_care < database/events.sql
+# mysql -u root -p hiv_patient_care < database/seed_data.sql  # Optional
 ```
 
 ---
@@ -250,9 +252,10 @@ After running all files, verify everything worked:
 -- Check that tables exist
 SHOW TABLES;
 
--- Should show 14 tables:
+-- Should show 17 tables:
 -- person, patient, staff, role, staff_role, visit, lab_test, 
 -- regimen, dispense, appointment, counseling_session, 
+-- cag, patient_cag, cag_rotation,
 -- adherence_log, alert, audit_log
 
 -- Check that procedures exist
@@ -279,9 +282,10 @@ SHOW EVENTS;
 4. ✅ `views.sql`
 5. ✅ `patient_views.sql`
 6. ✅ `patient_procedures.sql`
-7. ✅ `security.sql`
-8. ✅ `events.sql`
-9. ✅ `seed_data.sql` (optional)
+7. ✅ `cag_procedures.sql`
+8. ✅ `security.sql`
+9. ✅ `events.sql`
+10. ✅ `seed_data.sql` (optional)
 
 **Remember:** `schema.sql` must be run first - it's the foundation!
 

@@ -234,6 +234,143 @@ WHERE p.current_status = 'Active';
 -- Staff information with all assigned system roles (overlapping specialization)
 -- ============================================================================
 
+-- ============================================================================
+-- VIEW: CAG Summary
+-- Summary of all CAGs with member counts and status
+-- ============================================================================
+
+CREATE OR REPLACE VIEW `v_cag_summary` AS
+SELECT 
+    c.cag_id,
+    c.cag_name,
+    c.district,
+    c.subcounty,
+    c.parish,
+    c.village,
+    c.formation_date,
+    c.status,
+    c.max_members,
+    COUNT(DISTINCT pc.patient_id) AS current_member_count,
+    CONCAT(per.first_name, ' ', COALESCE(per.other_name, ''), ' ', per.last_name) AS coordinator_name,
+    CONCAT(sper.first_name, ' ', COALESCE(sper.other_name, ''), ' ', sper.last_name) AS facility_staff_name,
+    (SELECT COUNT(*) FROM cag_rotation cr WHERE cr.cag_id = c.cag_id) AS total_rotations,
+    (SELECT MAX(rotation_date) FROM cag_rotation cr WHERE cr.cag_id = c.cag_id) AS last_rotation_date
+FROM cag c
+LEFT JOIN patient_cag pc ON c.cag_id = pc.cag_id AND pc.is_active = TRUE
+LEFT JOIN patient p_coord ON c.coordinator_patient_id = p_coord.patient_id
+LEFT JOIN person per ON p_coord.person_id = per.person_id
+LEFT JOIN staff s ON c.facility_staff_id = s.staff_id
+LEFT JOIN person sper ON s.person_id = sper.person_id
+GROUP BY c.cag_id, c.cag_name, c.district, c.subcounty, c.parish, c.village, 
+         c.formation_date, c.status, c.max_members, per.first_name, per.other_name, 
+         per.last_name, sper.first_name, sper.other_name, sper.last_name;
+
+-- ============================================================================
+-- VIEW: CAG Members
+-- All active CAG members with their details
+-- ============================================================================
+
+CREATE OR REPLACE VIEW `v_cag_members` AS
+SELECT 
+    pc.patient_cag_id,
+    pc.cag_id,
+    c.cag_name,
+    pc.patient_id,
+    p.patient_code,
+    CONCAT(per.first_name, ' ', COALESCE(per.other_name, ''), ' ', per.last_name) AS patient_name,
+    per.sex,
+    TIMESTAMPDIFF(YEAR, per.date_of_birth, CURDATE()) AS age,
+    pc.join_date,
+    pc.role_in_cag,
+    p.current_status,
+    p.art_start_date,
+    (SELECT MAX(visit_date) FROM visit WHERE patient_id = p.patient_id) AS last_visit_date,
+    (SELECT MAX(test_date) FROM lab_test 
+     WHERE patient_id = p.patient_id 
+       AND test_type = 'Viral Load' 
+       AND result_status = 'Completed') AS last_vl_date,
+    (SELECT adherence_percent FROM adherence_log 
+     WHERE patient_id = p.patient_id 
+     ORDER BY log_date DESC LIMIT 1) AS last_adherence
+FROM patient_cag pc
+INNER JOIN cag c ON pc.cag_id = c.cag_id
+INNER JOIN patient p ON pc.patient_id = p.patient_id
+INNER JOIN person per ON p.person_id = per.person_id
+WHERE pc.is_active = TRUE
+ORDER BY c.cag_name, pc.role_in_cag DESC, pc.join_date;
+
+-- ============================================================================
+-- VIEW: CAG Rotation History
+-- History of CAG rotations with pickup details
+-- ============================================================================
+
+CREATE OR REPLACE VIEW `v_cag_rotation_history` AS
+SELECT 
+    cr.rotation_id,
+    cr.cag_id,
+    c.cag_name,
+    cr.rotation_date,
+    cr.pickup_patient_id,
+    p.patient_code AS pickup_patient_code,
+    CONCAT(per.first_name, ' ', COALESCE(per.other_name, ''), ' ', per.last_name) AS pickup_patient_name,
+    cr.patients_served,
+    cr.dispense_id,
+    d.dispense_date,
+    d.regimen_id,
+    r.regimen_name,
+    cr.notes
+FROM cag_rotation cr
+INNER JOIN cag c ON cr.cag_id = c.cag_id
+INNER JOIN patient p ON cr.pickup_patient_id = p.patient_id
+INNER JOIN person per ON p.person_id = per.person_id
+LEFT JOIN dispense d ON cr.dispense_id = d.dispense_id
+LEFT JOIN regimen r ON d.regimen_id = r.regimen_id
+ORDER BY cr.rotation_date DESC, c.cag_name;
+
+-- ============================================================================
+-- VIEW: CAG Performance
+-- CAG performance metrics including adherence and viral load suppression
+-- ============================================================================
+
+CREATE OR REPLACE VIEW `v_cag_performance` AS
+SELECT 
+    c.cag_id,
+    c.cag_name,
+    c.district,
+    c.subcounty,
+    c.parish,
+    c.village,
+    c.formation_date,
+    COUNT(DISTINCT pc.patient_id) AS active_members,
+    AVG(ad.adherence_percent) AS avg_adherence,
+    COUNT(DISTINCT CASE WHEN ad.adherence_percent >= 95 THEN pc.patient_id END) AS excellent_adherence_count,
+    COUNT(DISTINCT CASE WHEN lt.result_numeric < 1000 AND lt.test_type = 'Viral Load' THEN pc.patient_id END) AS suppressed_vl_count,
+    COUNT(DISTINCT CASE WHEN lt.result_numeric >= 1000 AND lt.test_type = 'Viral Load' THEN pc.patient_id END) AS unsuppressed_vl_count,
+    COUNT(DISTINCT cr.rotation_id) AS total_rotations,
+    MAX(cr.rotation_date) AS last_rotation_date,
+    MIN(cr.rotation_date) AS first_rotation_date
+FROM cag c
+LEFT JOIN patient_cag pc ON c.cag_id = pc.cag_id AND pc.is_active = TRUE
+LEFT JOIN adherence_log ad ON pc.patient_id = ad.patient_id
+LEFT JOIN lab_test lt ON pc.patient_id = lt.patient_id 
+    AND lt.test_type = 'Viral Load' 
+    AND lt.result_status = 'Completed'
+    AND lt.test_date = (
+        SELECT MAX(test_date) 
+        FROM lab_test 
+        WHERE patient_id = pc.patient_id 
+          AND test_type = 'Viral Load' 
+          AND result_status = 'Completed'
+    )
+LEFT JOIN cag_rotation cr ON c.cag_id = cr.cag_id
+WHERE c.status = 'Active'
+GROUP BY c.cag_id, c.cag_name, c.district, c.subcounty, c.parish, c.village, c.formation_date;
+
+-- ============================================================================
+-- VIEW: Staff with Roles
+-- Staff information with all assigned system roles (overlapping specialization)
+-- ============================================================================
+
 CREATE OR REPLACE VIEW `v_staff_with_roles` AS
 SELECT 
     s.staff_id,
