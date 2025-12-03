@@ -217,12 +217,12 @@ model LabTest {
 }
 
 enum TestType {
-  ViralLoad     @map("Viral Load")
+  ViralLoad
   CD4
   HB
   Creatinine
-  MalariaRDT    @map("Malaria RDT")
-  TBLAM         @map("TB-LAM")
+  MalariaRDT
+  TBLAM
   Urinalysis
 }
 
@@ -249,9 +249,9 @@ model Regimen {
 }
 
 enum RegimenLine {
-  FirstLine     @map("First Line")
-  SecondLine    @map("Second Line")
-  ThirdLine     @map("Third Line")
+  FirstLine
+  SecondLine
+  ThirdLine
 }
 
 model Dispense {
@@ -345,10 +345,10 @@ model AdherenceLog {
 }
 
 enum AdherenceMethod {
-  PillCount       @map("Pill Count")
+  PillCount
   PharmacyRefill
-  SelfReport      @map("Self Report")
-  CAGReport       @map("CAG Report")
+  SelfReport
+  CAGReport
   Computed
 }
 
@@ -379,8 +379,6 @@ enum AlertType {
   MissedRefill
   LowAdherence
   SevereOI
-
-  @@map("alert_type")
 }
 
 enum AlertLevel {
@@ -451,7 +449,7 @@ model PatientCag {
 enum CagRole {
   Member
   Coordinator
-  DeputyCoordinator  @map("Deputy Coordinator")
+  DeputyCoordinator
 }
 
 model CagRotation {
