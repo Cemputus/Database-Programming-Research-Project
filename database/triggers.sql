@@ -2,18 +2,51 @@
 -- TRIGGERS
 -- HIV Patient Care & Treatment Monitoring System
 -- ============================================================================
+--
+-- Triggers are like automatic actions that happen when something changes in the database.
+-- Think of them like motion-activated lights - when someone walks in (data changes),
+-- the light turns on automatically (trigger fires).
+--
+-- We use triggers to:
+-- - Automatically create alerts when something important happens
+-- - Keep an audit trail of who changed what and when
+-- - Make sure data stays consistent
+--
+-- The beauty of triggers: They happen automatically, so we don't forget to do these things!
+-- ============================================================================
 
-DELIMITER //
+DELIMITER //  -- Need to change delimiter for multi-line trigger code
 
 -- ============================================================================
 -- TRIGGER: High Viral Load Alert on Lab Test Insert
 -- ============================================================================
+--
+-- What this does:
+-- When a new lab test result is saved, this trigger automatically checks if the
+-- viral load is too high. If it is, it immediately creates an alert so staff
+-- know to take action.
+--
+-- Why this matters:
+-- A high viral load (over 1000 copies/mL) means the medication isn't working well.
+-- This could mean:
+-- - The patient isn't taking their medication regularly (poor adherence)
+-- - The virus has become resistant to the current medication
+-- - The medication needs to be changed
+--
+-- By creating an alert automatically, we make sure nothing falls through the cracks.
+-- Staff will see the alert and can take action right away.
+--
+-- When it fires:
+-- Right after a new lab test record is inserted into the database
+-- ============================================================================
 
-DROP TRIGGER IF EXISTS `trg_lab_test_high_vl_alert`//
+DROP TRIGGER IF EXISTS `trg_lab_test_high_vl_alert`//  -- Remove old version if exists
 CREATE TRIGGER `trg_lab_test_high_vl_alert`
-AFTER INSERT ON `lab_test`
-FOR EACH ROW
+AFTER INSERT ON `lab_test`  -- This runs AFTER we save a new lab test
+FOR EACH ROW  -- Check every new record
 BEGIN
+    -- Check if this is a viral load test that's been completed
+    -- AND if the result is over 1000 copies/mL (that's considered high)
     IF NEW.test_type = 'Viral Load' 
        AND NEW.result_status = 'Completed' 
        AND NEW.result_numeric IS NOT NULL 
