@@ -3,8 +3,8 @@
 // HIV Patient Care & Treatment Monitoring System
 // ============================================================================
 
-import { Router } from 'express';
-import { PrismaClient } from '@prisma/client';
+const { Router } = require('express');
+const { PrismaClient } = require('@prisma/client');
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -13,16 +13,16 @@ const prisma = new PrismaClient();
 router.get('/', async (req, res) => {
   try {
     const { patientId, staffId, startDate, endDate, page = '1', limit = '20' } = req.query;
-    const skip = (parseInt(page as string) - 1) * parseInt(limit as string);
-    const take = parseInt(limit as string);
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const take = parseInt(limit);
 
-    const where: any = {};
-    if (patientId) where.patientId = parseInt(patientId as string);
-    if (staffId) where.staffId = parseInt(staffId as string);
+    const where = {};
+    if (patientId) where.patientId = parseInt(patientId);
+    if (staffId) where.staffId = parseInt(staffId);
     if (startDate || endDate) {
       where.visitDate = {};
-      if (startDate) where.visitDate.gte = new Date(startDate as string);
-      if (endDate) where.visitDate.lte = new Date(endDate as string);
+      if (startDate) where.visitDate.gte = new Date(startDate);
+      if (endDate) where.visitDate.lte = new Date(endDate);
     }
 
     const [visits, total] = await Promise.all([
@@ -42,7 +42,7 @@ router.get('/', async (req, res) => {
     res.json({
       data: visits,
       pagination: {
-        page: parseInt(page as string),
+        page: parseInt(page),
         limit: take,
         total,
         pages: Math.ceil(total / take),
@@ -121,5 +121,5 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-export default router;
+module.exports = router;
 
