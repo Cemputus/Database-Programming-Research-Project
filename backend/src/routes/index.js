@@ -8,6 +8,14 @@ const authRouter = require('./auth');
 const patientsRouter = require('./patients');
 const visitsRouter = require('./visits');
 const labTestsRouter = require('./lab-tests');
+const pharmacyRouter = require('./pharmacy');
+const appointmentsRouter = require('./appointments');
+const counselingRouter = require('./counseling');
+const alertsRouter = require('./alerts');
+const adherenceRouter = require('./adherence');
+const staffRouter = require('./staff');
+const regimensRouter = require('./regimens');
+const cagRouter = require('./cag');
 const { PrismaClient } = require('@prisma/client');
 const { authenticate, authorize } = require('../middleware/auth');
 
@@ -26,15 +34,14 @@ router.use('/auth', authRouter);
 router.use('/patients', authenticate, patientsRouter);
 router.use('/visits', authenticate, visitsRouter);
 router.use('/lab-tests', authenticate, labTestsRouter);
-
-// Additional routes would be added here:
-// router.use('/pharmacy', pharmacyRouter);
-// router.use('/appointments', appointmentsRouter);
-// router.use('/counseling', counselingRouter);
-// router.use('/alerts', alertsRouter);
-// router.use('/adherence', adherenceRouter);
-// router.use('/staff', staffRouter);
-// router.use('/regimens', regimensRouter);
+router.use('/pharmacy', authenticate, pharmacyRouter);
+router.use('/appointments', authenticate, appointmentsRouter);
+router.use('/counseling', authenticate, counselingRouter);
+router.use('/alerts', authenticate, alertsRouter);
+router.use('/adherence', authenticate, adherenceRouter);
+router.use('/staff', authenticate, staffRouter);
+router.use('/regimens', authenticate, regimensRouter);
+router.use('/cag', authenticate, cagRouter);
 
 module.exports = router;
 
