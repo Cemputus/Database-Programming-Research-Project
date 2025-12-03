@@ -10,7 +10,7 @@
 ### ✅ Database Schema
 - **File:** `database/schema.sql`
 - **Status:** Complete
-- **Tables:** 14 tables created
+- **Tables:** 17 tables created
   - ✅ person (supertype)
   - ✅ patient (subtype)
   - ✅ staff (subtype)
@@ -22,6 +22,9 @@
   - ✅ dispense
   - ✅ appointment
   - ✅ counseling_session
+  - ✅ cag (Community ART Group)
+  - ✅ patient_cag (CAG membership)
+  - ✅ cag_rotation (CAG rotation tracking)
   - ✅ adherence_log
   - ✅ alert
   - ✅ audit_log
@@ -31,15 +34,34 @@
 - **Constraints:** All validation constraints in place
 - **Indexes:** Performance indexes created
 
-### ✅ Stored Procedures
+### ✅ Stored Procedures (All Merged)
 - **File:** `database/stored_procedures.sql`
 - **Status:** Complete
-- **Procedures:** 5 procedures
+- **Total Procedures:** 21 procedures
+- **General Procedures (5):**
   - ✅ `sp_compute_adherence` - Calculates medication adherence
   - ✅ `sp_check_overdue_vl` - Checks for overdue viral load tests
   - ✅ `sp_mark_missed_appointments` - Marks appointments as missed
   - ✅ `sp_update_patient_status_ltfu` - Updates LTFU status
   - ✅ `sp_check_missed_refills` - Checks for missed medication refills
+- **Patient Procedures (10):**
+  - ✅ `sp_patient_dashboard` - Get patient dashboard
+  - ✅ `sp_patient_visits` - Get visit history
+  - ✅ `sp_patient_lab_tests` - Get lab test history
+  - ✅ `sp_patient_medications` - Get medication history
+  - ✅ `sp_patient_appointments` - Get appointments
+  - ✅ `sp_patient_adherence` - Get adherence history
+  - ✅ `sp_patient_alerts` - Get alerts
+  - ✅ `sp_patient_progress_timeline` - Get progress timeline
+  - ✅ `sp_patient_next_appointment` - Get next appointment
+  - ✅ `sp_patient_summary_stats` - Get summary statistics
+- **CAG Procedures (6):**
+  - ✅ `sp_cag_add_patient` - Add patient to CAG
+  - ✅ `sp_cag_remove_patient` - Remove patient from CAG
+  - ✅ `sp_cag_record_rotation` - Record CAG rotation
+  - ✅ `sp_cag_get_members` - Get CAG members
+  - ✅ `sp_cag_get_rotations` - Get CAG rotation history
+  - ✅ `sp_cag_get_statistics` - Get CAG statistics
 
 ### ✅ Triggers
 - **File:** `database/triggers.sql`
@@ -56,21 +78,23 @@
   - ✅ `trg_dispense_audit_insert` - Dispense audit logging
   - ✅ `trg_adherence_low_alert` - Low adherence alert
 
-### ✅ Views (Staff/Admin)
+### ✅ Views (All Merged)
 - **File:** `database/views.sql`
 - **Status:** Complete
-- **Views:** 6 views
+- **Total Views:** 18 views
+- **Staff/Admin Views (6):**
   - ✅ `v_active_patients_summary` - Active patients overview
   - ✅ `v_patient_care_timeline` - Patient care timeline
   - ✅ `v_active_alerts_summary` - Active alerts summary
   - ✅ `v_viral_load_monitoring` - Viral load monitoring status
   - ✅ `v_adherence_summary` - Adherence summary
   - ✅ `v_staff_with_roles` - Staff with assigned roles
-
-### ✅ Patient Views
-- **File:** `database/patient_views.sql`
-- **Status:** Complete
-- **Views:** 8 views
+- **CAG Views (4):**
+  - ✅ `v_cag_summary` - CAG summary with member counts
+  - ✅ `v_cag_members` - Active CAG members
+  - ✅ `v_cag_rotation_history` - CAG rotation history
+  - ✅ `v_cag_performance` - CAG performance metrics
+- **Patient Views (8):**
   - ✅ `v_patient_dashboard` - Patient dashboard
   - ✅ `v_patient_visit_history` - Visit history
   - ✅ `v_patient_lab_history` - Lab test history
@@ -79,21 +103,6 @@
   - ✅ `v_patient_adherence_history` - Adherence history
   - ✅ `v_patient_alerts` - Patient alerts
   - ✅ `v_patient_progress_timeline` - Progress timeline
-
-### ✅ Patient Procedures
-- **File:** `database/patient_procedures.sql`
-- **Status:** Complete
-- **Procedures:** 10 procedures
-  - ✅ `sp_patient_dashboard` - Get patient dashboard
-  - ✅ `sp_patient_visits` - Get visit history
-  - ✅ `sp_patient_lab_tests` - Get lab test history
-  - ✅ `sp_patient_medications` - Get medication history
-  - ✅ `sp_patient_appointments` - Get appointments
-  - ✅ `sp_patient_adherence` - Get adherence history
-  - ✅ `sp_patient_alerts` - Get alerts
-  - ✅ `sp_patient_progress_timeline` - Get progress timeline
-  - ✅ `sp_patient_next_appointment` - Get next appointment
-  - ✅ `sp_patient_summary_stats` - Get summary statistics
 
 ### ✅ Security & Roles
 - **File:** `database/security.sql`
@@ -123,15 +132,20 @@
 - **Status:** Complete
 - **Data:**
   - ✅ 30 Staff members
-  - ✅ 747 Patients
+  - ✅ 747 Patients (all mapped to CAGs in their villages)
+  - ✅ 30 CAGs (2-3 per village across 5 districts)
+  - ✅ All patients assigned to CAGs in their villages
   - ✅ Thousands of visits
   - ✅ Thousands of lab tests
   - ✅ Thousands of dispenses
   - ✅ Thousands of appointments
   - ✅ Thousands of counseling sessions
   - ✅ Thousands of adherence logs
+  - ✅ 200 CAG rotation records
 - **NIN Format:** Correct (CF for females, CM for males)
 - **Ugandan Context:** All data follows Uganda MOH standards
+- **Districts:** Only Mukono, Buikwe, Jinja, Kampala, Wakiso
+- **Villages:** Real villages with 2-3 CAGs each
 
 ---
 
@@ -143,6 +157,8 @@
 - All triggers end with `END//`
 - All events end with `END//`
 - All files properly terminated
+- `views.sql` has no DELIMITER (views don't need it)
+- `stored_procedures.sql` has proper DELIMITER // ... DELIMITER ;
 
 ### ✅ Foreign Key Consistency
 - All foreign keys reference existing tables
@@ -164,21 +180,28 @@
 - View names follow `v_` prefix
 - Event names follow `evt_` prefix
 
+### ✅ File Structure
+- All merged files properly structured
+- No references to deleted files
+- All dependencies resolved
+
 ---
 
 ## 📊 System Statistics
 
 ### Database Objects
-- **Tables:** 14
-- **Stored Procedures:** 15 (5 system + 10 patient)
+- **Tables:** 17 (including 3 CAG tables)
+- **Stored Procedures:** 21 (5 general + 10 patient + 6 CAG)
 - **Triggers:** 10
-- **Views:** 14 (6 staff + 8 patient)
+- **Views:** 18 (6 staff/admin + 4 CAG + 8 patient)
 - **Events:** 5
 - **Roles:** 7
 
 ### Seed Data
 - **Staff:** 30
-- **Patients:** 747
+- **Patients:** 747 (all mapped to CAGs)
+- **CAGs:** 30 (2-3 per village)
+- **CAG Rotations:** 200
 - **Total Records:** ~15,000+ records
 
 ---
@@ -186,14 +209,17 @@
 ## ✅ Setup Order Verified
 
 1. ✅ `schema.sql` - Foundation (tables)
-2. ✅ `stored_procedures.sql` - System procedures
-3. ✅ `triggers.sql` - Automated triggers
-4. ✅ `views.sql` - Staff/admin views
-5. ✅ `patient_views.sql` - Patient views
-6. ✅ `patient_procedures.sql` - Patient procedures
-7. ✅ `security.sql` - Roles and permissions
-8. ✅ `events.sql` - Scheduled events
-9. ✅ `seed_data.sql` - Sample data (optional)
+2. ✅ `triggers.sql` - Automated triggers
+3. ✅ `views.sql` - All views (staff/admin, patient, CAG)
+4. ✅ `stored_procedures.sql` - All procedures (general, patient, CAG)
+5. ✅ `security.sql` - Roles and permissions
+6. ✅ `events.sql` - Scheduled events
+7. ✅ `seed_data.sql` - Sample data (optional)
+
+**Note:** Files have been merged to reduce redundancy:
+- `patient_views.sql` → merged into `views.sql`
+- `patient_procedures.sql` → merged into `stored_procedures.sql`
+- `cag_procedures.sql` → merged into `stored_procedures.sql`
 
 ---
 
@@ -220,15 +246,20 @@
 - ✅ Uganda MOH ART regimens
 - ✅ CPHL viral load workflow
 - ✅ LTFU guidelines (14 days missed, 90 days LTFU)
+- ✅ CAG model (Community ART Groups)
+- ✅ 2-3 CAGs per village
+- ✅ Patients mapped to CAGs in their villages
 
 ---
 
 ## ⚠️ Notes
 
-1. **Database Name:** All files now consistently use `hiv_patient_care`
+1. **Database Name:** All files consistently use `hiv_patient_care`
 2. **Seed Data:** Contains 747 patients with comprehensive supporting records
-3. **Comments:** All comments are precise and human-friendly
-4. **Setup:** Follow `SETUP_ORDER.md` for correct installation sequence
+3. **CAG System:** All 747 patients mapped to CAGs in their villages
+4. **File Structure:** Files merged to reduce redundancy (7 files total)
+5. **Comments:** All comments are precise and straightforward
+6. **Setup:** Follow `SETUP_ORDER.md` for correct installation sequence
 
 ---
 
@@ -236,3 +267,11 @@
 
 All components are in place and properly configured. The system is ready for database setup and testing.
 
+**File Count:** 7 files (reduced from 10 after merging)
+- `schema.sql`
+- `triggers.sql`
+- `views.sql` (merged: staff/admin + patient + CAG views)
+- `stored_procedures.sql` (merged: general + patient + CAG procedures)
+- `security.sql`
+- `events.sql`
+- `seed_data.sql`

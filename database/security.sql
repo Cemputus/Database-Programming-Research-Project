@@ -120,30 +120,35 @@ GRANT SELECT ON `v_staff_with_roles` TO 'db_readonly';
 -- Example: Create Users and Assign Roles
 -- ============================================================================
 
--- Note: In production, create actual users and assign roles like this:
--- CREATE USER 'admin_user'@'localhost' IDENTIFIED BY 'secure_password';
--- GRANT 'db_admin' TO 'admin_user'@'localhost';
--- SET DEFAULT ROLE 'db_admin' FOR 'admin_user'@'localhost';
+-- Create admin user
+CREATE USER IF NOT EXISTS 'nsubuga'@'localhost' IDENTIFIED BY 'admin123';
+GRANT 'db_admin' TO 'nsubuga'@'localhost';
+SET DEFAULT ROLE 'db_admin' FOR 'nsubuga'@'localhost';
 
--- CREATE USER 'doctor1'@'localhost' IDENTIFIED BY 'secure_password';
--- GRANT 'db_clinician' TO 'doctor1'@'localhost';
--- SET DEFAULT ROLE 'db_clinician' FOR 'doctor1'@'localhost';
+-- Create clinician user
+CREATE USER IF NOT EXISTS 'doctor1'@'localhost' IDENTIFIED BY 'doctor123';
+GRANT 'db_clinician' TO 'doctor1'@'localhost';
+SET DEFAULT ROLE 'db_clinician' FOR 'doctor1'@'localhost';
 
--- CREATE USER 'lab_tech1'@'localhost' IDENTIFIED BY 'secure_password';
--- GRANT 'db_lab' TO 'lab_tech1'@'localhost';
--- SET DEFAULT ROLE 'db_lab' FOR 'lab_tech1'@'localhost';
+-- Create lab technician user
+CREATE USER IF NOT EXISTS 'lab_tech1'@'localhost' IDENTIFIED BY 'lab_tech123';
+GRANT 'db_lab' TO 'lab_tech1'@'localhost';
+SET DEFAULT ROLE 'db_lab' FOR 'lab_tech1'@'localhost';
 
--- CREATE USER 'pharmacist1'@'localhost' IDENTIFIED BY 'secure_password';
--- GRANT 'db_pharmacy' TO 'pharmacist1'@'localhost';
--- SET DEFAULT ROLE 'db_pharmacy' FOR 'pharmacist1'@'localhost';
+-- Create pharmacist user
+CREATE USER IF NOT EXISTS 'pharmacist1'@'localhost' IDENTIFIED BY 'pharmacist1';
+GRANT 'db_pharmacy' TO 'pharmacist1'@'localhost';
+SET DEFAULT ROLE 'db_pharmacy' FOR 'pharmacist1'@'localhost';
 
--- CREATE USER 'counselor1'@'localhost' IDENTIFIED BY 'secure_password';
--- GRANT 'db_counselor' TO 'counselor1'@'localhost';
--- SET DEFAULT ROLE 'db_counselor' FOR 'counselor1'@'localhost';
+-- Create counselor user
+CREATE USER IF NOT EXISTS 'counselor1'@'localhost' IDENTIFIED BY 'counselor1';
+GRANT 'db_counselor' TO 'counselor1'@'localhost';
+SET DEFAULT ROLE 'db_counselor' FOR 'counselor1'@'localhost';
 
--- CREATE USER 'records_officer1'@'localhost' IDENTIFIED BY 'secure_password';
--- GRANT 'db_readonly' TO 'records_officer1'@'localhost';
--- SET DEFAULT ROLE 'db_readonly' FOR 'records_officer1'@'localhost';
+-- Create records officer user
+CREATE USER IF NOT EXISTS 'records_officer1'@'localhost' IDENTIFIED BY 'records_officer1';
+GRANT 'db_readonly' TO 'records_officer1'@'localhost';
+SET DEFAULT ROLE 'db_readonly' FOR 'records_officer1'@'localhost';
 
 -- ============================================================================
 -- GRANT PRIVILEGES: db_patient

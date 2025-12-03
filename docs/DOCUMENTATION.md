@@ -448,42 +448,43 @@ The database uses an **Enhanced Entity Relationship (EER) Model** with:
 
 1. Create database:
 ```sql
-CREATE DATABASE hiv_care_monitoring;
+CREATE DATABASE IF NOT EXISTS hiv_patient_care;
+USE hiv_patient_care;
 ```
 
 2. Run schema:
 ```bash
-mysql -u root -p hiv_care_monitoring < database/schema.sql
+mysql -u root -p hiv_patient_care < database/schema.sql
 ```
 
-3. Run stored procedures:
+3. Run triggers:
 ```bash
-mysql -u root -p hiv_care_monitoring < database/stored_procedures.sql
+mysql -u root -p hiv_patient_care < database/triggers.sql
 ```
 
-4. Run triggers:
+4. Run views:
 ```bash
-mysql -u root -p hiv_care_monitoring < database/triggers.sql
+mysql -u root -p hiv_patient_care < database/views.sql
 ```
 
-5. Run views:
+5. Run stored procedures:
 ```bash
-mysql -u root -p hiv_care_monitoring < database/views.sql
+mysql -u root -p hiv_patient_care < database/stored_procedures.sql
 ```
 
 6. Run security:
 ```bash
-mysql -u root -p hiv_care_monitoring < database/security.sql
+mysql -u root -p hiv_patient_care < database/security.sql
 ```
 
 7. Run events:
 ```bash
-mysql -u root -p hiv_care_monitoring < database/events.sql
+mysql -u root -p hiv_patient_care < database/events.sql
 ```
 
 8. Seed data (optional):
 ```bash
-mysql -u root -p hiv_care_monitoring < database/seed_data.sql
+mysql -u root -p hiv_patient_care < database/seed_data.sql
 ```
 
 ### Backend Setup
@@ -496,7 +497,7 @@ npm install
 
 2. Set up environment variables:
 ```bash
-DATABASE_URL="mysql://user:password@localhost:3306/hiv_care_monitoring"
+DATABASE_URL="mysql://user:password@localhost:3306/hiv_patient_care"
 ```
 
 3. Generate Prisma client:

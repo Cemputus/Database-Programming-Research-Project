@@ -32,29 +32,10 @@ mysql -u root -p hiv_patient_care < database/schema.sql
 
 ---
 
-### Step 3: Run Stored Procedures
-**File**: `database/stored_procedures.sql`
-
-**Why second?** Procedures use the tables we just created.
-
-**What it does:**
-- Creates procedures for computing adherence
-- Creates procedures for checking overdue viral loads
-- Creates procedures for marking missed appointments
-- Creates procedures for updating LTFU status
-- Creates procedures for checking missed refills
-
-**Command:**
-```bash
-mysql -u root -p hiv_patient_care < database/stored_procedures.sql
-```
-
----
-
-### Step 4: Run Triggers
+### Step 3: Run Triggers
 **File**: `database/triggers.sql`
 
-**Why third?** Triggers use tables and sometimes call procedures.
+**Why third?** Triggers use tables and sometimes call procedures. Must run before procedures that might be called by triggers.
 
 **What it does:**
 - Creates triggers that automatically create alerts (high VL, missed appointments, etc.)
@@ -68,7 +49,7 @@ mysql -u root -p hiv_patient_care < database/triggers.sql
 
 ---
 
-### Step 5: Run Views (Staff/Admin Views)
+### Step 4: Run Views (All Views - Staff/Admin, Patient, and CAG)
 **File**: `database/views.sql`
 
 **Why fourth?** Views query the tables we created.
@@ -78,6 +59,9 @@ mysql -u root -p hiv_patient_care < database/triggers.sql
 - Creates views for viral load monitoring
 - Creates views for adherence summaries
 - Creates views for active alerts
+- Creates views for CAG management (summary, members, rotations, performance)
+- Creates views for patients to see their own dashboard
+- Creates views for patients to see their visit history, lab results, medications, appointments, and progress timeline
 
 **Command:**
 ```bash
@@ -86,51 +70,31 @@ mysql -u root -p hiv_patient_care < database/views.sql
 
 ---
 
-### Step 6: Run Patient Views
-**File**: `database/patient_views.sql`
+### Step 5: Run Stored Procedures (All Procedures - General, Patient, and CAG)
+**File**: `database/stored_procedures.sql`
 
-**Why fifth?** Patient views also query the tables.
+**Why fifth?** Procedures use the tables and views we created.
 
 **What it does:**
-- Creates views for patients to see their own dashboard
-- Creates views for patients to see their visit history
-- Creates views for patients to see their lab results
-- Creates views for patients to see their medication history
-- Creates views for patients to see their appointments
-- Creates views for patients to see their progress timeline
+- Creates procedures for computing adherence
+- Creates procedures for checking overdue viral loads
+- Creates procedures for marking missed appointments
+- Creates procedures for updating LTFU status
+- Creates procedures for checking missed refills
+- Creates procedures for patients to get their dashboard, visits, lab tests, medications, appointments, alerts, and progress timeline
+- Creates procedures for CAG management (add/remove patients, record rotations, get members/statistics)
 
 **Command:**
 ```bash
-mysql -u root -p hiv_patient_care < database/patient_views.sql
+mysql -u root -p hiv_patient_care < database/stored_procedures.sql
 ```
 
 ---
 
-### Step 7: Run Patient Procedures
-**File**: `database/patient_procedures.sql`
-
-**Why sixth?** Patient procedures use the patient views we just created.
-
-**What it does:**
-- Creates procedures for patients to get their dashboard
-- Creates procedures for patients to get their visit history
-- Creates procedures for patients to get their lab tests
-- Creates procedures for patients to get their medications
-- Creates procedures for patients to get their appointments
-- Creates procedures for patients to get their alerts
-- Creates procedures for patients to get their progress timeline
-
-**Command:**
-```bash
-mysql -u root -p hiv_patient_care < database/patient_procedures.sql
-```
-
----
-
-### Step 9: Run Security Setup
+### Step 6: Run Security Setup
 **File**: `database/security.sql`
 
-**Why ninth?** Security roles need tables to exist first.
+**Why sixth?** Security roles need tables to exist first.
 
 **What it does:**
 - Creates database roles (db_admin, db_clinician, db_lab, db_pharmacy, db_counselor, db_readonly, db_patient)
@@ -144,10 +108,10 @@ mysql -u root -p hiv_patient_care < database/security.sql
 
 ---
 
-### Step 10: Run Scheduled Events
+### Step 7: Run Scheduled Events
 **File**: `database/events.sql`
 
-**Why tenth?** Events call the stored procedures we created earlier.
+**Why seventh?** Events call the stored procedures we created earlier.
 
 **What it does:**
 - Sets up daily checks for overdue viral loads
@@ -163,20 +127,23 @@ mysql -u root -p hiv_patient_care < database/events.sql
 
 ---
 
-### Step 11: Run Seed Data (Optional)
+### Step 8: Run Seed Data (Optional)
 **File**: `database/seed_data.sql`
 
 **Why last?** This inserts sample data, so everything else must exist first.
 
 **What it does:**
 - Inserts sample staff members
-- Inserts sample patients
+- Inserts sample patients (747 patients)
 - Inserts sample visits
 - Inserts sample lab tests
 - Inserts sample dispenses
 - Inserts sample appointments
 - Inserts sample counseling sessions
 - Inserts sample adherence logs
+- Creates CAGs (30 CAGs across 5 districts)
+- Maps all patients to CAGs in their villages
+- Creates sample rotation records
 
 **Command:**
 ```bash
@@ -198,12 +165,9 @@ mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS hiv_patient_care;"
 
 # Run files in order
 mysql -u root -p hiv_patient_care < database/schema.sql
-mysql -u root -p hiv_patient_care < database/stored_procedures.sql
 mysql -u root -p hiv_patient_care < database/triggers.sql
 mysql -u root -p hiv_patient_care < database/views.sql
-mysql -u root -p hiv_patient_care < database/patient_views.sql
-mysql -u root -p hiv_patient_care < database/patient_procedures.sql
-mysql -u root -p hiv_patient_care < database/cag_procedures.sql
+mysql -u root -p hiv_patient_care < database/stored_procedures.sql
 mysql -u root -p hiv_patient_care < database/security.sql
 mysql -u root -p hiv_patient_care < database/events.sql
 # mysql -u root -p hiv_patient_care < database/seed_data.sql  # Optional
@@ -217,12 +181,9 @@ mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS hiv_patient_care;"
 
 # Run files in order
 mysql -u root -p hiv_patient_care < database/schema.sql
-mysql -u root -p hiv_patient_care < database/stored_procedures.sql
 mysql -u root -p hiv_patient_care < database/triggers.sql
 mysql -u root -p hiv_patient_care < database/views.sql
-mysql -u root -p hiv_patient_care < database/patient_views.sql
-mysql -u root -p hiv_patient_care < database/patient_procedures.sql
-mysql -u root -p hiv_patient_care < database/cag_procedures.sql
+mysql -u root -p hiv_patient_care < database/stored_procedures.sql
 mysql -u root -p hiv_patient_care < database/security.sql
 mysql -u root -p hiv_patient_care < database/events.sql
 # mysql -u root -p hiv_patient_care < database/seed_data.sql  # Optional
@@ -261,11 +222,29 @@ SHOW TABLES;
 -- Check that procedures exist
 SHOW PROCEDURE STATUS WHERE Db = 'hiv_patient_care';
 
+-- Should show 16 procedures:
+-- sp_compute_adherence, sp_check_overdue_vl, sp_mark_missed_appointments,
+-- sp_update_patient_status_ltfu, sp_check_missed_refills,
+-- sp_patient_dashboard, sp_patient_visits, sp_patient_lab_tests,
+-- sp_patient_medications, sp_patient_appointments, sp_patient_adherence,
+-- sp_patient_alerts, sp_patient_progress_timeline, sp_patient_next_appointment,
+-- sp_patient_summary_stats, sp_cag_add_patient, sp_cag_remove_patient,
+-- sp_cag_record_rotation, sp_cag_get_members, sp_cag_get_rotations,
+-- sp_cag_get_statistics
+
 -- Check that triggers exist
 SHOW TRIGGERS;
 
 -- Check that views exist
 SHOW FULL TABLES WHERE Table_type = 'VIEW';
+
+-- Should show 18 views:
+-- v_active_patients_summary, v_patient_care_timeline, v_active_alerts_summary,
+-- v_viral_load_monitoring, v_adherence_summary, v_staff_with_roles,
+-- v_cag_summary, v_cag_members, v_cag_rotation_history, v_cag_performance,
+-- v_patient_dashboard, v_patient_visit_history, v_patient_lab_history,
+-- v_patient_medication_history, v_patient_appointments, v_patient_adherence_history,
+-- v_patient_alerts, v_patient_progress_timeline
 
 -- Check that events exist
 SHOW EVENTS;
@@ -277,15 +256,15 @@ SHOW EVENTS;
 
 **Run in this order:**
 1. ✅ `schema.sql` - **START HERE!**
-2. ✅ `stored_procedures.sql`
-3. ✅ `triggers.sql`
-4. ✅ `views.sql`
-5. ✅ `patient_views.sql`
-6. ✅ `patient_procedures.sql`
-7. ✅ `cag_procedures.sql`
-8. ✅ `security.sql`
-9. ✅ `events.sql`
-10. ✅ `seed_data.sql` (optional)
+2. ✅ `triggers.sql`
+3. ✅ `views.sql` (includes all views: staff/admin, patient, and CAG)
+4. ✅ `stored_procedures.sql` (includes all procedures: general, patient, and CAG)
+5. ✅ `security.sql`
+6. ✅ `events.sql`
+7. ✅ `seed_data.sql` (optional)
 
 **Remember:** `schema.sql` must be run first - it's the foundation!
 
+**Note:** Files have been merged to reduce redundancy:
+- `patient_views.sql` merged into `views.sql`
+- `patient_procedures.sql` and `cag_procedures.sql` merged into `stored_procedures.sql`
