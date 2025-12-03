@@ -22,7 +22,7 @@ router.get('/', async (req, res) => {
     }
     if (search) {
       where.OR = [
-        { patientNumber: { contains: search as string } },
+        { patientCode: { contains: search as string } },
         { person: { firstName: { contains: search as string } } },
         { person: { lastName: { contains: search as string } } },
       ];
@@ -119,17 +119,13 @@ router.post('/', async (req, res) => {
       parish,
       village,
       addressLine,
-      patientNumber,
+      patientCode,
       enrollmentDate,
       artStartDate,
-      baselineCd4,
-      baselineVl,
-      whoStage,
-      tbStatus,
-      pregnancyStatus,
-      nextOfKinName,
-      nextOfKinPhone,
-      nextOfKinRelationship,
+      nextOfKin,
+      nokPhone,
+      supportGroup,
+      treatmentPartner,
     } = req.body;
 
     // Create person first
@@ -155,17 +151,13 @@ router.post('/', async (req, res) => {
     const patient = await prisma.patient.create({
       data: {
         personId: person.personId,
-        patientNumber,
+        patientCode,
         enrollmentDate: new Date(enrollmentDate),
         artStartDate: artStartDate ? new Date(artStartDate) : null,
-        baselineCd4,
-        baselineVl: baselineVl ? parseFloat(baselineVl) : null,
-        whoStage,
-        tbStatus,
-        pregnancyStatus,
-        nextOfKinName,
-        nextOfKinPhone,
-        nextOfKinRelationship,
+        nextOfKin,
+        nokPhone,
+        supportGroup,
+        treatmentPartner,
       },
       include: {
         person: true,
@@ -187,12 +179,10 @@ router.put('/:id', async (req, res) => {
     const {
       artStartDate,
       currentStatus,
-      whoStage,
-      tbStatus,
-      pregnancyStatus,
-      nextOfKinName,
-      nextOfKinPhone,
-      nextOfKinRelationship,
+      nextOfKin,
+      nokPhone,
+      supportGroup,
+      treatmentPartner,
     } = req.body;
 
     const patient = await prisma.patient.update({
@@ -200,12 +190,10 @@ router.put('/:id', async (req, res) => {
       data: {
         artStartDate: artStartDate ? new Date(artStartDate) : undefined,
         currentStatus,
-        whoStage,
-        tbStatus,
-        pregnancyStatus,
-        nextOfKinName,
-        nextOfKinPhone,
-        nextOfKinRelationship,
+        nextOfKin,
+        nokPhone,
+        supportGroup,
+        treatmentPartner,
       },
       include: {
         person: true,
@@ -250,7 +238,7 @@ router.get('/:id/timeline', async (req, res) => {
       ...visits.map(v => ({
         eventType: 'Visit',
         eventDate: v.visitDate,
-        description: `Clinical visit - ${v.visitType}`,
+        description: `Clinical visit`,
         staffName: `${v.staff.person.firstName} ${v.staff.person.lastName}`,
       })),
       ...labTests.map(lt => ({
@@ -267,8 +255,8 @@ router.get('/:id/timeline', async (req, res) => {
       })),
       ...appointments.map(a => ({
         eventType: 'Appointment',
-        eventDate: a.appointmentDate,
-        description: `Appointment - ${a.appointmentType} (${a.status})`,
+        eventDate: a.scheduledDate,
+        description: `Appointment - ${a.status}`,
         staffName: null,
       })),
     ].sort((a, b) => new Date(b.eventDate).getTime() - new Date(a.eventDate).getTime());

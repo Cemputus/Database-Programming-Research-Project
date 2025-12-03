@@ -33,8 +33,7 @@ router.get('/', async (req, res) => {
         take,
         include: {
           patient: { include: { person: true } },
-          orderedByStaff: { include: { person: true } },
-          performedByStaff: { include: { person: true } },
+          staff: { include: { person: true } },
         },
         orderBy: { testDate: 'desc' },
       }),
@@ -85,21 +84,18 @@ router.post('/', async (req, res) => {
         patientId: req.body.patientId,
         testType: req.body.testType,
         testDate: new Date(req.body.testDate),
-        orderedBy: req.body.orderedBy,
-        performedBy: req.body.performedBy,
-        sampleId: req.body.sampleId,
-        sampleCollectionDate: req.body.sampleCollectionDate ? new Date(req.body.sampleCollectionDate) : null,
-        resultValue: req.body.resultValue,
+        visitId: req.body.visitId ? parseInt(req.body.visitId) : null,
+        staffId: req.body.staffId,
         resultNumeric: req.body.resultNumeric ? parseFloat(req.body.resultNumeric) : null,
         resultText: req.body.resultText,
-        resultUnit: req.body.resultUnit,
-        referenceRange: req.body.referenceRange,
-        isAbnormal: req.body.isAbnormal,
-        status: req.body.status || 'Pending',
+        units: req.body.units,
+        cphlSampleId: req.body.cphlSampleId,
+        resultStatus: req.body.resultStatus || 'Pending',
         notes: req.body.notes,
       },
       include: {
         patient: { include: { person: true } },
+        staff: { include: { person: true } },
       },
     });
 
@@ -115,19 +111,14 @@ router.put('/:id', async (req, res) => {
     const labTest = await prisma.labTest.update({
       where: { labTestId: parseInt(req.params.id) },
       data: {
-        performedBy: req.body.performedBy,
-        resultValue: req.body.resultValue,
         resultNumeric: req.body.resultNumeric ? parseFloat(req.body.resultNumeric) : null,
         resultText: req.body.resultText,
-        resultUnit: req.body.resultUnit,
-        referenceRange: req.body.referenceRange,
-        isAbnormal: req.body.isAbnormal,
-        status: req.body.status,
-        notes: req.body.notes,
+        units: req.body.units,
+        resultStatus: req.body.resultStatus,
       },
       include: {
         patient: { include: { person: true } },
-        performedByStaff: { include: { person: true } },
+        staff: { include: { person: true } },
       },
     });
 
@@ -144,7 +135,7 @@ router.get('/patient/:patientId/viral-load', async (req, res) => {
       where: {
         patientId: parseInt(req.params.patientId),
         testType: 'ViralLoad',
-        status: 'Completed',
+        resultStatus: 'Completed',
       },
       orderBy: { testDate: 'desc' },
     });
