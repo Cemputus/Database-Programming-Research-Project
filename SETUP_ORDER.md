@@ -10,8 +10,8 @@ This guide shows you the exact order to run the database files. **Order matters!
 ### Step 1: Create the Database (One-Time Setup)
 ```sql
 -- First, create the database if it doesn't exist
-CREATE DATABASE IF NOT EXISTS hiv_care_monitoring;
-USE hiv_care_monitoring;
+CREATE DATABASE IF NOT EXISTS hiv_patient_care;
+USE hiv_patient_care;
 ```
 
 ### Step 2: Run Schema File (Foundation)
@@ -27,7 +27,7 @@ USE hiv_care_monitoring;
 
 **Command:**
 ```bash
-mysql -u root -p hiv_care_monitoring < database/schema.sql
+mysql -u root -p hiv_patient_care < database/schema.sql
 ```
 
 ---
@@ -197,7 +197,7 @@ You can create a script to run everything in order:
 mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS hiv_care_monitoring;"
 
 # Run files in order
-mysql -u root -p hiv_care_monitoring < database/schema.sql
+mysql -u root -p hiv_patient_care < database/schema.sql
 mysql -u root -p hiv_care_monitoring < database/stored_procedures.sql
 mysql -u root -p hiv_care_monitoring < database/triggers.sql
 mysql -u root -p hiv_care_monitoring < database/views.sql
@@ -215,7 +215,7 @@ mysql -u root -p hiv_care_monitoring < database/events.sql
 mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS hiv_care_monitoring;"
 
 # Run files in order
-mysql -u root -p hiv_care_monitoring < database/schema.sql
+mysql -u root -p hiv_patient_care < database/schema.sql
 mysql -u root -p hiv_care_monitoring < database/stored_procedures.sql
 mysql -u root -p hiv_care_monitoring < database/triggers.sql
 mysql -u root -p hiv_care_monitoring < database/views.sql
@@ -256,7 +256,7 @@ SHOW TABLES;
 -- adherence_log, alert, audit_log
 
 -- Check that procedures exist
-SHOW PROCEDURE STATUS WHERE Db = 'hiv_care_monitoring';
+SHOW PROCEDURE STATUS WHERE Db = 'hiv_patient_care';
 
 -- Check that triggers exist
 SHOW TRIGGERS;

@@ -215,7 +215,8 @@ END//
 -- Runs daily via scheduled event
 -- ============================================================================
 
-DROP PROCEDURE IF EXISTS `sp_update_patient_status_ltfu`()
+DROP PROCEDURE IF EXISTS `sp_update_patient_status_ltfu`//
+CREATE PROCEDURE `sp_update_patient_status_ltfu`()
 BEGIN
     DECLARE v_ltfu_days INT UNSIGNED DEFAULT 90;
     
@@ -281,7 +282,8 @@ END//
 -- Runs daily via scheduled event
 -- ============================================================================
 
-DROP PROCEDURE IF EXISTS `sp_check_missed_refills`()
+DROP PROCEDURE IF EXISTS `sp_check_missed_refills`//
+CREATE PROCEDURE `sp_check_missed_refills`()
 BEGIN
     -- Create alerts for patients with missed refills
     INSERT INTO alert (patient_id, alert_type, alert_level, alert_msg, is_resolved)
