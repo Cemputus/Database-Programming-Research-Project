@@ -42,21 +42,25 @@ router.post('/login', async (req, res) => {
       return res.status(403).json({ error: 'Account is inactive. Contact administrator.' });
     }
 
-    // Check password (in production, passwords should be hashed in database)
-    // For now, we'll check if password matches a default or stored hash
-    // In production, you should have a password field in staff table or a separate auth table
-    const passwordMatch = await bcrypt.compare(password, staff.passwordHash || '$2a$10$defaultHash');
-    
     // For development: allow default password 'password123' for all staff
-    // In production, remove this and require proper password hashing
-    const defaultPasswordHash = await bcrypt.hash('password123', 10);
-    const isDefaultPassword = password === 'password123' || await bcrypt.compare(password, defaultPasswordHash);
-
-    if (!passwordMatch && !isDefaultPassword) {
-      // Check against a simple default for development
-      // In production, all passwords must be properly hashed
+    // In production, you should:
+    // 1. Add a password_hash column to the staff table
+    // 2. Hash passwords before storing
+    // 3. Check against stored hash here
+    const DEFAULT_PASSWORD = 'password123';
+    
+    if (password !== DEFAULT_PASSWORD) {
       return res.status(401).json({ error: 'Invalid staff code or password.' });
     }
+    
+    // In production, replace above with:
+    // if (!staff.passwordHash) {
+    //   return res.status(401).json({ error: 'Password not set. Contact administrator.' });
+    // }
+    // const passwordMatch = await bcrypt.compare(password, staff.passwordHash);
+    // if (!passwordMatch) {
+    //   return res.status(401).json({ error: 'Invalid staff code or password.' });
+    // }
 
     // Get user roles
     const roles = staff.staffRoles.map(sr => sr.role.roleName);
