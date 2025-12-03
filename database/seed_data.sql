@@ -18725,4 +18725,109 @@ INSERT INTO `adherence_log` (`patient_id`, `log_date`, `adherence_percent`, `met
 (747, '2025-01-27', 52.04, 'CAG Report', 'Needs improvement adherence'),
 (747, '2025-02-09', 50.28, 'Pill Count', 'Needs improvement adherence');
 
+-- ============================================================================
+-- Insert CAGs (Community ART Groups)
+-- ============================================================================
+
+INSERT INTO `cag` (`cag_name`, `district`, `subcounty`, `parish`, `village`, `formation_date`, `facility_staff_id`, `status`, `max_members`, `notes`) VALUES
+('Kigombya CAG', 'Mukono', 'Mukono Central', 'Mukono Town', 'Kigombya', '2020-01-15', 1, 'Active', 6, 'Kigombya Community ART Group'),
+('Kasawo CAG', 'Mukono', 'Nakifuma', 'Nakifuma', 'Kasawo', '2020-02-20', 2, 'Active', 6, 'Kasawo Community ART Group'),
+('Nakawa CAG', 'Mukono', 'Mukono Central', 'Mukono Town', 'Nakawa', '2020-03-10', 5, 'Active', 6, 'Nakawa Community ART Group'),
+('Ntinda CAG', 'Mukono', 'Mukono Central', 'Mukono Town', 'Ntinda', '2020-04-05', 6, 'Active', 6, 'Ntinda Community ART Group');
+
+-- ============================================================================
+-- Insert Patient-CAG Relationships
+-- Based on support_group field in patient table
+-- ============================================================================
+
+-- Get CAG IDs (assuming they are 1-4 based on insertion order)
+-- Kigombya CAG = 1, Kasawo CAG = 2, Nakawa CAG = 3, Ntinda CAG = 4
+
+INSERT INTO `patient_cag` (`patient_id`, `cag_id`, `join_date`, `role_in_cag`, `is_active`, `exit_date`, `exit_reason`)
+SELECT 
+    p.patient_id,
+    CASE 
+        WHEN p.support_group = 'Kigombya CAG' THEN 1
+        WHEN p.support_group = 'Kasawo CAG' THEN 2
+        WHEN p.support_group = 'Nakawa CAG' THEN 3
+        WHEN p.support_group = 'Ntinda CAG' THEN 4
+    END AS cag_id,
+    p.enrollment_date AS join_date,
+    'Member' AS role_in_cag,
+    CASE 
+        WHEN p.current_status = 'Active' THEN TRUE
+        ELSE FALSE
+    END AS is_active,
+    CASE 
+        WHEN p.current_status IN ('Dead', 'Transferred-Out', 'LTFU') THEN 
+            COALESCE(
+                (SELECT MAX(visit_date) FROM visit WHERE patient_id = p.patient_id),
+                (SELECT MAX(dispense_date) FROM dispense WHERE patient_id = p.patient_id),
+                p.enrollment_date
+            )
+        ELSE NULL
+    END AS exit_date,
+    CASE 
+        WHEN p.current_status = 'Dead' THEN 'Death'
+        WHEN p.current_status = 'Transferred-Out' THEN 'Transferred'
+        WHEN p.current_status = 'LTFU' THEN 'Lost to Follow-Up'
+        ELSE NULL
+    END AS exit_reason
+FROM patient p
+WHERE p.support_group IS NOT NULL
+  AND p.support_group IN ('Kigombya CAG', 'Kasawo CAG', 'Nakawa CAG', 'Ntinda CAG');
+
+-- Set coordinators for each CAG (first active member)
+UPDATE `cag` SET `coordinator_patient_id` = (
+    SELECT patient_id FROM patient_cag 
+    WHERE cag_id = 1 AND is_active = TRUE 
+    ORDER BY join_date ASC LIMIT 1
+) WHERE cag_id = 1;
+
+UPDATE `cag` SET `coordinator_patient_id` = (
+    SELECT patient_id FROM patient_cag 
+    WHERE cag_id = 2 AND is_active = TRUE 
+    ORDER BY join_date ASC LIMIT 1
+) WHERE cag_id = 2;
+
+UPDATE `cag` SET `coordinator_patient_id` = (
+    SELECT patient_id FROM patient_cag 
+    WHERE cag_id = 3 AND is_active = TRUE 
+    ORDER BY join_date ASC LIMIT 1
+) WHERE cag_id = 3;
+
+UPDATE `cag` SET `coordinator_patient_id` = (
+    SELECT patient_id FROM patient_cag 
+    WHERE cag_id = 4 AND is_active = TRUE 
+    ORDER BY join_date ASC LIMIT 1
+) WHERE cag_id = 4;
+
+-- Update coordinator roles in patient_cag
+UPDATE `patient_cag` pc
+INNER JOIN `cag` c ON pc.cag_id = c.cag_id AND pc.patient_id = c.coordinator_patient_id
+SET pc.role_in_cag = 'Coordinator';
+
+-- ============================================================================
+-- Insert Sample CAG Rotations
+-- Sample rotations showing members picking up medications for the group
+-- ============================================================================
+
+INSERT INTO `cag_rotation` (`cag_id`, `pickup_patient_id`, `rotation_date`, `dispense_id`, `patients_served`, `notes`)
+SELECT 
+    pc.cag_id,
+    pc.patient_id,
+    d.dispense_date,
+    d.dispense_id,
+    (SELECT COUNT(*) FROM patient_cag pc2 WHERE pc2.cag_id = pc.cag_id AND pc2.is_active = TRUE) AS patients_served,
+    CONCAT('Rotation pickup for ', c.cag_name)
+FROM patient_cag pc
+INNER JOIN cag c ON pc.cag_id = c.cag_id
+INNER JOIN dispense d ON pc.patient_id = d.patient_id
+WHERE pc.is_active = TRUE
+  AND pc.role_in_cag IN ('Coordinator', 'Member')
+  AND d.dispense_date >= '2023-01-01'
+  AND d.dispense_date <= '2024-12-31'
+  AND MOD(d.dispense_id, 10) = 0  -- Sample every 10th dispense
+LIMIT 50;
+
 SET FOREIGN_KEY_CHECKS = 1;
