@@ -14,6 +14,7 @@ DROP ROLE IF EXISTS 'db_lab';
 DROP ROLE IF EXISTS 'db_pharmacy';
 DROP ROLE IF EXISTS 'db_counselor';
 DROP ROLE IF EXISTS 'db_readonly';
+DROP ROLE IF EXISTS 'db_patient';
 
 -- Create roles
 CREATE ROLE 'db_admin';
@@ -22,6 +23,7 @@ CREATE ROLE 'db_lab';
 CREATE ROLE 'db_pharmacy';
 CREATE ROLE 'db_counselor';
 CREATE ROLE 'db_readonly';
+CREATE ROLE 'db_patient';
 
 -- ============================================================================
 -- GRANT PRIVILEGES: db_admin (Full Access)
@@ -157,6 +159,50 @@ GRANT SELECT ON `v_staff_with_roles` TO 'db_readonly';
 -- CREATE USER 'records_officer1'@'localhost' IDENTIFIED BY 'secure_password';
 -- GRANT 'db_readonly' TO 'records_officer1'@'localhost';
 -- SET DEFAULT ROLE 'db_readonly' FOR 'records_officer1'@'localhost';
+
+-- ============================================================================
+-- GRANT PRIVILEGES: db_patient (Patient Self-Service)
+-- ============================================================================
+
+-- Patients can only access their own data through views and stored procedures
+-- They cannot directly query tables for security
+
+-- Grant access to patient self-service views
+GRANT SELECT ON `v_patient_dashboard` TO 'db_patient';
+GRANT SELECT ON `v_patient_visit_history` TO 'db_patient';
+GRANT SELECT ON `v_patient_lab_history` TO 'db_patient';
+GRANT SELECT ON `v_patient_medication_history` TO 'db_patient';
+GRANT SELECT ON `v_patient_appointments` TO 'db_patient';
+GRANT SELECT ON `v_patient_adherence_history` TO 'db_patient';
+GRANT SELECT ON `v_patient_alerts` TO 'db_patient';
+GRANT SELECT ON `v_patient_progress_timeline` TO 'db_patient';
+
+-- Grant execute on patient self-service stored procedures
+GRANT EXECUTE ON PROCEDURE `sp_patient_dashboard` TO 'db_patient';
+GRANT EXECUTE ON PROCEDURE `sp_patient_visits` TO 'db_patient';
+GRANT EXECUTE ON PROCEDURE `sp_patient_lab_tests` TO 'db_patient';
+GRANT EXECUTE ON PROCEDURE `sp_patient_medications` TO 'db_patient';
+GRANT EXECUTE ON PROCEDURE `sp_patient_appointments` TO 'db_patient';
+GRANT EXECUTE ON PROCEDURE `sp_patient_adherence` TO 'db_patient';
+GRANT EXECUTE ON PROCEDURE `sp_patient_alerts` TO 'db_patient';
+GRANT EXECUTE ON PROCEDURE `sp_patient_progress_timeline` TO 'db_patient';
+GRANT EXECUTE ON PROCEDURE `sp_patient_next_appointment` TO 'db_patient';
+GRANT EXECUTE ON PROCEDURE `sp_patient_summary_stats` TO 'db_patient';
+
+-- Patients can read their own patient record (for verification)
+-- Note: Application layer should filter by patient_code for security
+GRANT SELECT ON `patient` TO 'db_patient';
+GRANT SELECT ON `person` TO 'db_patient';
+
+-- ============================================================================
+-- Example: Create Patient User
+-- ============================================================================
+
+-- Note: In production, create patient users with their patient_code as username
+-- Example:
+-- CREATE USER 'patient_MGH_ART_0001'@'localhost' IDENTIFIED BY 'secure_password';
+-- GRANT 'db_patient' TO 'patient_MGH_ART_0001'@'localhost';
+-- SET DEFAULT ROLE 'db_patient' FOR 'patient_MGH_ART_0001'@'localhost';
 
 -- ============================================================================
 -- FLUSH PRIVILEGES
