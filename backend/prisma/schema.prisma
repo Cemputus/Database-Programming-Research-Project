@@ -1,0 +1,406 @@
+// ============================================================================
+// Prisma Schema - CORRECTED VERSION
+// HIV Patient Care & Treatment Monitoring System
+// Mukono General Hospital ART Clinic
+// ============================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// SUPER TYPE: person (Generalization)
+// ============================================================================
+
+model Person {
+  personId    Int      @id @default(autoincrement()) @map("person_id")
+  nin         String   @unique @db.VarChar(20)
+  firstName   String   @map("first_name") @db.VarChar(100)
+  lastName    String   @map("last_name") @db.VarChar(100)
+  otherName   String?  @map("other_name") @db.VarChar(100)
+  sex         Sex      @db.Enum("sex")
+  dateOfBirth DateTime @map("date_of_birth") @db.Date
+  phoneContact String? @map("phone_contact") @db.VarChar(20)
+  district    String   @db.VarChar(100)
+  subcounty   String   @db.VarChar(100)
+  parish      String?  @db.VarChar(100)
+  village     String?  @db.VarChar(100)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamp(0)
+
+  // Relationships
+  patient Patient?
+  staff   Staff?
+
+  @@index([district])
+  @@index([firstName, lastName])
+  @@map("person")
+}
+
+enum Sex {
+  M
+  F
+  Other
+}
+
+// ============================================================================
+// SUB TYPE: patient (Specialization from person)
+// ============================================================================
+
+model Patient {
+  patientId        Int           @id @default(autoincrement()) @map("patient_id")
+  personId         Int           @unique @map("person_id")
+  patientCode      String        @unique @map("patient_code") @db.VarChar(50)
+  enrollmentDate   DateTime      @map("enrollment_date") @db.Date
+  artStartDate     DateTime?     @map("art_start_date") @db.Date
+  currentStatus    PatientStatus @default(Active) @map("current_status")
+  nextOfKin        String?       @map("next_of_kin") @db.VarChar(150)
+  nokPhone         String?       @map("nok_phone") @db.VarChar(20)
+  supportGroup     String?       @map("support_group") @db.VarChar(150)
+  treatmentPartner String?       @map("treatment_partner") @db.VarChar(150)
+
+  // Relationships
+  person            Person              @relation(fields: [personId], references: [personId], onDelete: Restrict, onUpdate: Cascade)
+  visits            Visit[]
+  labTests          LabTest[]
+  dispenses         Dispense[]
+  appointments      Appointment[]
+  counselingSessions CounselingSession[]
+  adherenceLogs     AdherenceLog[]
+  alerts            Alert[]
+
+  @@index([currentStatus])
+  @@index([enrollmentDate])
+  @@index([currentStatus, enrollmentDate])
+  @@map("patient")
+}
+
+enum PatientStatus {
+  Active
+  TransferredOut
+  LTFU
+  Dead
+}
+
+// ============================================================================
+// SUB TYPE: staff (Specialization from person)
+// ============================================================================
+
+model Staff {
+  staffId            Int           @id @default(autoincrement()) @map("staff_id")
+  personId           Int           @unique @map("person_id")
+  staffCode          String        @unique @map("staff_code") @db.VarChar(30)
+  cadre              Cadre
+  moHRegistrationNo  String?       @map("moH_registration_no") @db.VarChar(50)
+  hireDate           DateTime      @map("hire_date") @db.Date
+  active             Boolean       @default(true)
+
+  // Relationships
+  person            Person         @relation(fields: [personId], references: [personId], onDelete: Restrict, onUpdate: Cascade)
+  staffRoles        StaffRole[]
+  visits            Visit[]
+  labTests          LabTest[]
+  dispenses         Dispense[]
+  appointments     Appointment[]
+  counselingSessions CounselingSession[] @relation("Counselor")
+  auditLogs         AuditLog[]
+
+  @@map("staff")
+}
+
+enum Cadre {
+  Doctor
+  ClinicalOfficer
+  Nurse
+  Midwife
+  LabTechnician
+  Pharmacist
+  Counselor
+  RecordsOfficer
+}
+
+// ============================================================================
+// ROLE AND STAFF_ROLE (Overlapping Specialization)
+// ============================================================================
+
+model Role {
+  roleId    Int        @id @default(autoincrement()) @map("role_id")
+  roleName  String     @unique @map("role_name") @db.VarChar(50)
+
+  // Relationships
+  staffRoles StaffRole[]
+
+  @@map("role")
+}
+
+model StaffRole {
+  staffId Int
+  roleId  Int
+
+  // Relationships
+  staff Staff @relation(fields: [staffId], references: [staffId], onDelete: Cascade, onUpdate: Cascade)
+  role  Role  @relation(fields: [roleId], references: [roleId], onDelete: Restrict, onUpdate: Cascade)
+
+  @@id([staffId, roleId])
+  @@map("staff_role")
+}
+
+// ============================================================================
+// CLINICAL ENTITIES
+// ============================================================================
+
+model Visit {
+  visitId            BigInt          @id @default(autoincrement()) @map("visit_id")
+  patientId          Int             @map("patient_id")
+  staffId            Int             @map("staff_id")
+  visitDate          DateTime        @map("visit_date") @db.Date
+  whoStage           Int?            @map("who_stage") @db.UnsignedTinyInt
+  weightKg           Decimal?        @map("weight_kg") @db.Decimal(5, 2)
+  bp                 String?         @db.VarChar(20)
+  tbScreening        TbScreening?    @map("tb_screening")
+  symptoms           String?         @db.Text
+  oiDiagnosis        String?         @map("oi_diagnosis") @db.Text
+  nextAppointmentDate DateTime?      @map("next_appointment_date") @db.Date
+
+  // Relationships
+  patient Patient @relation(fields: [patientId], references: [patientId], onDelete: Restrict, onUpdate: Cascade)
+  staff   Staff   @relation(fields: [staffId], references: [staffId], onDelete: Restrict, onUpdate: Cascade)
+  labTests LabTest[]
+
+  @@index([visitDate])
+  @@index([patientId, visitDate(sort: Desc)])
+  @@index([staffId])
+  @@map("visit")
+}
+
+enum TbScreening {
+  Negative
+  Presumptive
+  Positive
+}
+
+// ============================================================================
+// LAB TEST (Categorization)
+// ============================================================================
+
+model LabTest {
+  labTestId      BigInt        @id @default(autoincrement()) @map("lab_test_id")
+  patientId      Int           @map("patient_id")
+  visitId        BigInt?       @map("visit_id")
+  staffId        Int           @map("staff_id")
+  testType       TestType
+  resultNumeric  Decimal?      @map("result_numeric") @db.Decimal(18, 4)
+  resultText     String?       @map("result_text") @db.VarChar(150)
+  testDate       DateTime      @map("test_date") @db.Date
+  units          String?       @db.VarChar(50)
+  cphlSampleId   String?       @map("cphl_sample_id") @db.VarChar(50)
+  resultStatus   LabTestStatus @default(Pending) @map("result_status")
+
+  // Relationships
+  patient Patient @relation(fields: [patientId], references: [patientId], onDelete: Restrict, onUpdate: Cascade)
+  visit   Visit?  @relation(fields: [visitId], references: [visitId], onDelete: SetNull, onUpdate: Cascade)
+  staff   Staff   @relation(fields: [staffId], references: [staffId], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([testDate])
+  @@index([patientId, testType, testDate(sort: Desc)])
+  @@index([testType])
+  @@index([cphlSampleId])
+  @@index([visitId])
+  @@map("lab_test")
+}
+
+enum TestType {
+  ViralLoad
+  CD4
+  HB
+  Creatinine
+  MalariaRDT
+  TBLAM
+  Urinalysis
+}
+
+enum LabTestStatus {
+  Pending
+  Completed
+  Rejected
+}
+
+// ============================================================================
+// PHARMACY ENTITIES
+// ============================================================================
+
+model Regimen {
+  regimenId   Int        @id @default(autoincrement()) @map("regimen_id")
+  regimenCode String     @unique @map("regimen_code") @db.VarChar(50)
+  regimenName String     @map("regimen_name") @db.VarChar(150)
+  line        RegimenLine
+
+  // Relationships
+  dispenses   Dispense[]
+
+  @@map("regimen")
+}
+
+enum RegimenLine {
+  FirstLine
+  SecondLine
+  ThirdLine
+}
+
+model Dispense {
+  dispenseId        BigInt   @id @default(autoincrement()) @map("dispense_id")
+  patientId         Int      @map("patient_id")
+  staffId           Int      @map("staff_id")
+  regimenId         Int      @map("regimen_id")
+  dispenseDate      DateTime @map("dispense_date") @db.Date
+  daysSupply        Int      @map("days_supply") @db.UnsignedInt
+  quantityDispensed Int      @map("quantity_dispensed") @db.UnsignedInt
+  nextRefillDate    DateTime @map("next_refill_date") @db.Date
+  notes             String?  @db.Text
+
+  // Relationships
+  patient Patient @relation(fields: [patientId], references: [patientId], onDelete: Restrict, onUpdate: Cascade)
+  regimen Regimen @relation(fields: [regimenId], references: [regimenId], onDelete: Restrict, onUpdate: Cascade)
+  staff   Staff   @relation(fields: [staffId], references: [staffId], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([dispenseDate])
+  @@index([patientId, dispenseDate(sort: Desc)])
+  @@index([nextRefillDate])
+  @@map("dispense")
+}
+
+// ============================================================================
+// APPOINTMENT AND COUNSELING
+// ============================================================================
+
+model Appointment {
+  appointmentId  BigInt            @id @default(autoincrement()) @map("appointment_id")
+  patientId      Int               @map("patient_id")
+  staffId        Int               @map("staff_id")
+  scheduledDate  DateTime          @map("scheduled_date") @db.Date
+  status         AppointmentStatus @default(Scheduled)
+  reason         String?           @db.VarChar(150)
+
+  // Relationships
+  patient Patient @relation(fields: [patientId], references: [patientId], onDelete: Restrict, onUpdate: Cascade)
+  staff   Staff   @relation(fields: [staffId], references: [staffId], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([scheduledDate, status])
+  @@index([patientId, scheduledDate])
+  @@map("appointment")
+}
+
+enum AppointmentStatus {
+  Scheduled
+  Attended
+  Missed
+  Rescheduled
+  Cancelled
+}
+
+model CounselingSession {
+  counselingId      BigInt   @id @default(autoincrement()) @map("counseling_id")
+  patientId         Int      @map("patient_id")
+  counselorId       Int      @map("counselor_id")
+  sessionDate       DateTime @map("session_date") @db.Date
+  topic             String   @db.VarChar(150)
+  adherenceBarriers String?  @map("adherence_barriers") @db.Text
+  notes             String?  @db.Text
+
+  // Relationships
+  patient  Patient @relation(fields: [patientId], references: [patientId], onDelete: Restrict, onUpdate: Cascade)
+  counselor Staff  @relation("Counselor", fields: [counselorId], references: [staffId], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([sessionDate])
+  @@index([patientId, sessionDate])
+  @@map("counseling_session")
+}
+
+// ============================================================================
+// ADHERENCE AND ALERTS
+// ============================================================================
+
+model AdherenceLog {
+  adherenceId      BigInt          @id @default(autoincrement()) @map("adherence_id")
+  patientId        Int             @map("patient_id")
+  logDate          DateTime        @map("log_date") @db.Date
+  adherencePercent Decimal         @map("adherence_percent") @db.Decimal(5, 2)
+  methodUsed       AdherenceMethod @map("method_used")
+  notes            String?         @db.Text
+
+  // Relationships
+  patient Patient @relation(fields: [patientId], references: [patientId], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([logDate])
+  @@index([patientId, logDate])
+  @@map("adherence_log")
+}
+
+enum AdherenceMethod {
+  PillCount
+  PharmacyRefill
+  SelfReport
+  CAGReport
+  Computed
+}
+
+model Alert {
+  alertId      BigInt      @id @default(autoincrement()) @map("alert_id")
+  patientId    Int         @map("patient_id")
+  alertType    AlertType
+  alertLevel   AlertLevel  @default(Warning) @map("alert_level")
+  alertMsg     String      @map("alert_msg") @db.Text
+  triggeredAt  DateTime    @default(now()) @map("triggered_at") @db.Timestamp(0)
+  isResolved   Boolean     @default(false) @map("is_resolved")
+  resolvedAt   DateTime?   @map("resolved_at") @db.Timestamp(0)
+
+  // Relationships
+  patient Patient @relation(fields: [patientId], references: [patientId], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([isResolved, alertLevel])
+  @@index([patientId, isResolved])
+  @@index([alertType])
+  @@index([triggeredAt])
+  @@map("alert")
+}
+
+enum AlertType {
+  HighViralLoad
+  OverdueVL
+  MissedAppointment
+  MissedRefill
+  LowAdherence
+  SevereOI
+}
+
+enum AlertLevel {
+  Info
+  Warning
+  Critical
+}
+
+// ============================================================================
+// AUDIT LOG
+// ============================================================================
+
+model AuditLog {
+  auditId    BigInt   @id @default(autoincrement()) @map("audit_id")
+  staffId    Int?     @map("staff_id")
+  action     String   @db.VarChar(100)
+  tableName  String   @map("table_name") @db.VarChar(100)
+  recordId   String   @map("record_id") @db.VarChar(100)
+  details    String?  @db.Text
+  actionTime DateTime @default(now()) @map("action_time") @db.Timestamp(0)
+
+  // Relationships
+  staff Staff? @relation(fields: [staffId], references: [staffId], onDelete: SetNull, onUpdate: Cascade)
+
+  @@index([tableName, recordId])
+  @@index([actionTime])
+  @@index([action])
+  @@map("audit_log")
+}

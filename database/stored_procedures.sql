@@ -23,7 +23,7 @@ BEGIN
     DECLARE v_daily_pills INT UNSIGNED DEFAULT 1;
     
     -- Get the most recent dispense record
-    SELECT d.days_supply, d.quantity, d.dispense_date
+    SELECT d.days_supply, d.quantity_dispensed, d.dispense_date
     INTO v_days_in_period, v_pills_expected, v_daily_pills
     FROM dispense d
     WHERE d.patient_id = p_patient_id
@@ -39,7 +39,7 @@ BEGIN
     
     -- Calculate pills missed (simplified - in real system, use pill count data)
     SET v_pills_missed = GREATEST(0, v_pills_expected - COALESCE((
-        SELECT SUM(quantity) 
+        SELECT SUM(quantity_dispensed) 
         FROM dispense 
         WHERE patient_id = p_patient_id 
           AND dispense_date BETWEEN COALESCE(p_start_date, DATE_SUB(CURDATE(), INTERVAL 30 DAY)) 
@@ -53,30 +53,20 @@ BEGIN
         SET v_adherence_percentage = 0;
     END IF;
     
-    -- Insert or update adherence log
+    -- Insert adherence log
     INSERT INTO adherence_log (
         patient_id,
-        assessment_date,
-        assessment_method,
-        adherence_percentage,
-        pills_missed,
-        pills_expected,
-        days_missed
+        log_date,
+        method_used,
+        adherence_percent,
+        notes
     ) VALUES (
         p_patient_id,
         COALESCE(p_end_date, CURDATE()),
         'Computed',
         v_adherence_percentage,
-        v_pills_missed,
-        v_pills_expected,
-        CEIL(v_pills_missed / v_daily_pills)
-    )
-    ON DUPLICATE KEY UPDATE
-        adherence_percentage = v_adherence_percentage,
-        pills_missed = v_pills_missed,
-        pills_expected = v_pills_expected,
-        days_missed = CEIL(v_pills_missed / v_daily_pills),
-        updated_at = CURRENT_TIMESTAMP;
+        CONCAT('Computed from dispense records. Pills expected: ', v_pills_expected, ', Pills missed: ', v_pills_missed)
+    );
     
     SELECT v_adherence_percentage AS adherence_percentage,
            v_pills_missed AS pills_missed,
@@ -133,30 +123,30 @@ BEGIN
         END IF;
         
         -- Check if alert already exists
-        SELECT COUNT(*) INTO v_alert_exists
-        FROM alert
-        WHERE patient_id = v_patient_id
-          AND alert_type = 'Overdue VL'
-          AND status = 'Active';
-        
-        -- Create alert if VL is overdue (>180 days) and no active alert exists
-        IF v_days_since_vl > 180 AND v_alert_exists = 0 THEN
-            INSERT INTO alert (
-                patient_id,
-                alert_type,
-                alert_message,
-                severity,
-                status
-            ) VALUES (
-                v_patient_id,
-                'Overdue VL',
-                CONCAT('Viral load test is overdue. Last test: ', 
-                       COALESCE(DATE_FORMAT(v_last_vl_date, '%Y-%m-%d'), 'Never'),
-                       ' (', v_days_since_vl, ' days ago)'),
-                'High',
-                'Active'
-            );
-        END IF;
+    SELECT COUNT(*) INTO v_alert_exists
+    FROM alert
+    WHERE patient_id = v_patient_id
+      AND alert_type = 'Overdue VL'
+      AND is_resolved = FALSE;
+    
+    -- Create alert if VL is overdue (>180 days) and no active alert exists
+    IF v_days_since_vl > 180 AND v_alert_exists = 0 THEN
+        INSERT INTO alert (
+            patient_id,
+            alert_type,
+            alert_level,
+            alert_msg,
+            is_resolved
+        ) VALUES (
+            v_patient_id,
+            'Overdue VL',
+            'Warning',
+            CONCAT('Viral load test is overdue. Last test: ', 
+                   COALESCE(DATE_FORMAT(v_last_vl_date, '%Y-%m-%d'), 'Never'),
+                   ' (', v_days_since_vl, ' days ago)'),
+            FALSE
+        );
+    END IF;
     END LOOP;
     
     CLOSE patient_cursor;
@@ -164,7 +154,7 @@ BEGIN
     SELECT COUNT(*) AS alerts_created
     FROM alert
     WHERE alert_type = 'Overdue VL'
-      AND DATE(created_at) = CURDATE();
+      AND DATE(triggered_at) = CURDATE();
 END//
 
 -- ============================================================================
@@ -180,36 +170,33 @@ BEGIN
     
     -- Update appointments that are past due (more than grace_days)
     UPDATE appointment
-    SET status = 'Missed',
-        updated_at = CURRENT_TIMESTAMP
+    SET status = 'Missed'
     WHERE status = 'Scheduled'
-      AND appointment_date < DATE_SUB(CURDATE(), INTERVAL v_grace_days DAY);
+      AND scheduled_date < DATE_SUB(CURDATE(), INTERVAL v_grace_days DAY);
     
     -- Create alerts for missed appointments
-    INSERT INTO alert (patient_id, alert_type, alert_message, severity, status, related_entity_type, related_entity_id)
+    INSERT INTO alert (patient_id, alert_type, alert_level, alert_msg, is_resolved)
     SELECT 
         a.patient_id,
         'Missed Appointment',
-        CONCAT('Patient missed appointment scheduled for ', DATE_FORMAT(a.appointment_date, '%Y-%m-%d')),
-        'Medium',
-        'Active',
-        'appointment',
-        a.appointment_id
+        'Warning',
+        CONCAT('Patient missed appointment scheduled for ', DATE_FORMAT(a.scheduled_date, '%Y-%m-%d')),
+        FALSE
     FROM appointment a
     WHERE a.status = 'Missed'
-      AND a.appointment_date < DATE_SUB(CURDATE(), INTERVAL v_grace_days DAY)
+      AND a.scheduled_date < DATE_SUB(CURDATE(), INTERVAL v_grace_days DAY)
       AND NOT EXISTS (
           SELECT 1 FROM alert al
           WHERE al.patient_id = a.patient_id
             AND al.alert_type = 'Missed Appointment'
-            AND al.related_entity_id = a.appointment_id
-            AND al.status = 'Active'
+            AND al.is_resolved = FALSE
+            AND DATE(al.triggered_at) = CURDATE()
       );
     
     SELECT COUNT(*) AS missed_appointments_marked
     FROM appointment
     WHERE status = 'Missed'
-      AND DATE(updated_at) = CURDATE();
+      AND scheduled_date < DATE_SUB(CURDATE(), INTERVAL v_grace_days DAY);
 END//
 
 -- ============================================================================
@@ -222,8 +209,7 @@ BEGIN
     
     -- Update patients who haven't had a visit or dispense in 90+ days
     UPDATE patient p
-    SET p.current_status = 'LTFU',
-        p.updated_at = CURRENT_TIMESTAMP
+    SET p.current_status = 'LTFU'
     WHERE p.current_status = 'Active'
       AND NOT EXISTS (
           SELECT 1 FROM visit v
@@ -249,32 +235,31 @@ BEGIN
           ) AS combined
       ), p.enrollment_date)) >= v_ltfu_days;
     
-    -- Create LTFU alerts
-    INSERT INTO alert (patient_id, alert_type, alert_message, severity, status)
+    -- Create LTFU alerts (Note: LTFU Risk alert type not in enum, using 'Severe OI' as placeholder)
+    INSERT INTO alert (patient_id, alert_type, alert_level, alert_msg, is_resolved)
     SELECT 
         p.patient_id,
-        'LTFU Risk',
+        'Severe OI',
+        'Critical',
         CONCAT('Patient marked as LTFU. Last contact: ', 
                COALESCE(DATE_FORMAT(GREATEST(
                    (SELECT MAX(visit_date) FROM visit WHERE patient_id = p.patient_id),
                    (SELECT MAX(dispense_date) FROM dispense WHERE patient_id = p.patient_id)
                ), '%Y-%m-%d'), 'Unknown')),
-        'Critical',
-        'Active'
+        FALSE
     FROM patient p
     WHERE p.current_status = 'LTFU'
-      AND DATE(p.updated_at) = CURDATE()
       AND NOT EXISTS (
           SELECT 1 FROM alert al
           WHERE al.patient_id = p.patient_id
-            AND al.alert_type = 'LTFU Risk'
-            AND al.status = 'Active'
+            AND al.alert_type = 'Severe OI'
+            AND al.is_resolved = FALSE
+            AND DATE(al.triggered_at) = CURDATE()
       );
     
     SELECT COUNT(*) AS patients_marked_ltfu
     FROM patient
-    WHERE current_status = 'LTFU'
-      AND DATE(updated_at) = CURDATE();
+    WHERE current_status = 'LTFU';
 END//
 
 -- ============================================================================
@@ -284,17 +269,15 @@ END//
 DROP PROCEDURE IF EXISTS `sp_check_missed_refills`()
 BEGIN
     -- Create alerts for patients with missed refills
-    INSERT INTO alert (patient_id, alert_type, alert_message, severity, status, related_entity_type, related_entity_id)
+    INSERT INTO alert (patient_id, alert_type, alert_level, alert_msg, is_resolved)
     SELECT 
         d.patient_id,
         'Missed Refill',
+        'Warning',
         CONCAT('Patient missed refill. Expected refill date: ', 
                DATE_FORMAT(d.next_refill_date, '%Y-%m-%d'),
                ' (', DATEDIFF(CURDATE(), d.next_refill_date), ' days overdue)'),
-        'High',
-        'Active',
-        'dispense',
-        d.dispense_id
+        FALSE
     FROM dispense d
     INNER JOIN patient p ON d.patient_id = p.patient_id
     WHERE p.current_status = 'Active'
@@ -308,14 +291,14 @@ BEGIN
           SELECT 1 FROM alert al
           WHERE al.patient_id = d.patient_id
             AND al.alert_type = 'Missed Refill'
-            AND al.related_entity_id = d.dispense_id
-            AND al.status = 'Active'
+            AND al.is_resolved = FALSE
+            AND DATE(al.triggered_at) = CURDATE()
       );
     
     SELECT COUNT(*) AS missed_refill_alerts_created
     FROM alert
     WHERE alert_type = 'Missed Refill'
-      AND DATE(created_at) = CURDATE();
+      AND DATE(triggered_at) = CURDATE();
 END//
 
 DELIMITER ;

@@ -15,26 +15,22 @@ AFTER INSERT ON `lab_test`
 FOR EACH ROW
 BEGIN
     IF NEW.test_type = 'Viral Load' 
-       AND NEW.status = 'Completed' 
+       AND NEW.result_status = 'Completed' 
        AND NEW.result_numeric IS NOT NULL 
        AND NEW.result_numeric > 1000 THEN
         
         INSERT INTO alert (
             patient_id,
             alert_type,
-            alert_message,
-            severity,
-            status,
-            related_entity_type,
-            related_entity_id
+            alert_level,
+            alert_msg,
+            is_resolved
         ) VALUES (
             NEW.patient_id,
             'High Viral Load',
-            CONCAT('High viral load detected: ', NEW.result_numeric, ' copies/mL. Action required.'),
             'Critical',
-            'Active',
-            'lab_test',
-            NEW.lab_test_id
+            CONCAT('High viral load detected: ', NEW.result_numeric, ' copies/mL. Action required.'),
+            FALSE
         );
     END IF;
 END//
@@ -49,7 +45,7 @@ AFTER UPDATE ON `lab_test`
 FOR EACH ROW
 BEGIN
     IF NEW.test_type = 'Viral Load' 
-       AND NEW.status = 'Completed' 
+       AND NEW.result_status = 'Completed' 
        AND NEW.result_numeric IS NOT NULL 
        AND NEW.result_numeric > 1000 
        AND (OLD.result_numeric IS NULL OR OLD.result_numeric <= 1000) THEN
@@ -57,19 +53,15 @@ BEGIN
         INSERT INTO alert (
             patient_id,
             alert_type,
-            alert_message,
-            severity,
-            status,
-            related_entity_type,
-            related_entity_id
+            alert_level,
+            alert_msg,
+            is_resolved
         ) VALUES (
             NEW.patient_id,
             'High Viral Load',
-            CONCAT('High viral load detected: ', NEW.result_numeric, ' copies/mL. Action required.'),
             'Critical',
-            'Active',
-            'lab_test',
-            NEW.lab_test_id
+            CONCAT('High viral load detected: ', NEW.result_numeric, ' copies/mL. Action required.'),
+            FALSE
         );
     END IF;
 END//
@@ -87,20 +79,16 @@ BEGIN
         INSERT INTO alert (
             patient_id,
             alert_type,
-            alert_message,
-            severity,
-            status,
-            related_entity_type,
-            related_entity_id
+            alert_level,
+            alert_msg,
+            is_resolved
         ) VALUES (
             NEW.patient_id,
             'Missed Appointment',
+            'Warning',
             CONCAT('Patient missed appointment scheduled for ', 
-                   DATE_FORMAT(NEW.appointment_date, '%Y-%m-%d')),
-            'Medium',
-            'Active',
-            'appointment',
-            NEW.appointment_id
+                   DATE_FORMAT(NEW.scheduled_date, '%Y-%m-%d')),
+            FALSE
         );
     END IF;
 END//
@@ -118,21 +106,12 @@ BEGIN
         table_name,
         record_id,
         action,
-        new_values,
-        changed_at
+        details
     ) VALUES (
         'patient',
-        NEW.patient_id,
+        CAST(NEW.patient_id AS CHAR),
         'INSERT',
-        JSON_OBJECT(
-            'patient_id', NEW.patient_id,
-            'person_id', NEW.person_id,
-            'patient_number', NEW.patient_number,
-            'enrollment_date', NEW.enrollment_date,
-            'art_start_date', NEW.art_start_date,
-            'current_status', NEW.current_status
-        ),
-        CURRENT_TIMESTAMP
+        CONCAT('Patient created: ', NEW.patient_code, ', Status: ', NEW.current_status)
     );
 END//
 
@@ -145,24 +124,12 @@ BEGIN
         table_name,
         record_id,
         action,
-        old_values,
-        new_values,
-        changed_at
+        details
     ) VALUES (
         'patient',
-        NEW.patient_id,
+        CAST(NEW.patient_id AS CHAR),
         'UPDATE',
-        JSON_OBJECT(
-            'patient_id', OLD.patient_id,
-            'current_status', OLD.current_status,
-            'art_start_date', OLD.art_start_date
-        ),
-        JSON_OBJECT(
-            'patient_id', NEW.patient_id,
-            'current_status', NEW.current_status,
-            'art_start_date', NEW.art_start_date
-        ),
-        CURRENT_TIMESTAMP
+        CONCAT('Status changed from ', OLD.current_status, ' to ', NEW.current_status)
     );
 END//
 
@@ -179,20 +146,12 @@ BEGIN
         table_name,
         record_id,
         action,
-        new_values,
-        changed_at
+        details
     ) VALUES (
         'visit',
-        NEW.visit_id,
+        CAST(NEW.visit_id AS CHAR),
         'INSERT',
-        JSON_OBJECT(
-            'visit_id', NEW.visit_id,
-            'patient_id', NEW.patient_id,
-            'visit_date', NEW.visit_date,
-            'visit_type', NEW.visit_type,
-            'staff_id', NEW.staff_id
-        ),
-        CURRENT_TIMESTAMP
+        CONCAT('Visit created for patient ', NEW.patient_id, ' on ', NEW.visit_date)
     );
 END//
 
@@ -232,27 +191,17 @@ CREATE TRIGGER `trg_lab_test_audit_update`
 AFTER UPDATE ON `lab_test`
 FOR EACH ROW
 BEGIN
-    IF OLD.status != NEW.status OR OLD.result_numeric != NEW.result_numeric THEN
+    IF OLD.result_status != NEW.result_status OR OLD.result_numeric != NEW.result_numeric THEN
         INSERT INTO audit_log (
             table_name,
             record_id,
             action,
-            old_values,
-            new_values,
-            changed_at
+            details
         ) VALUES (
             'lab_test',
-            NEW.lab_test_id,
+            CAST(NEW.lab_test_id AS CHAR),
             'UPDATE',
-            JSON_OBJECT(
-                'status', OLD.status,
-                'result_numeric', OLD.result_numeric
-            ),
-            JSON_OBJECT(
-                'status', NEW.status,
-                'result_numeric', NEW.result_numeric
-            ),
-            CURRENT_TIMESTAMP
+            CONCAT('Lab test updated: Status ', OLD.result_status, ' -> ', NEW.result_status, ', Result: ', COALESCE(NEW.result_numeric, 'N/A'))
         );
     END IF;
 END//
@@ -270,21 +219,12 @@ BEGIN
         table_name,
         record_id,
         action,
-        new_values,
-        changed_at
+        details
     ) VALUES (
         'dispense',
-        NEW.dispense_id,
+        CAST(NEW.dispense_id AS CHAR),
         'INSERT',
-        JSON_OBJECT(
-            'dispense_id', NEW.dispense_id,
-            'patient_id', NEW.patient_id,
-            'regimen_id', NEW.regimen_id,
-            'dispense_date', NEW.dispense_date,
-            'days_supply', NEW.days_supply,
-            'next_refill_date', NEW.next_refill_date
-        ),
-        CURRENT_TIMESTAMP
+        CONCAT('Dispense created: Patient ', NEW.patient_id, ', Days supply: ', NEW.days_supply)
     );
 END//
 
@@ -297,27 +237,23 @@ CREATE TRIGGER `trg_adherence_low_alert`
 AFTER INSERT ON `adherence_log`
 FOR EACH ROW
 BEGIN
-    IF NEW.adherence_percentage < 85 AND NEW.assessment_method != 'Computed' THEN
+    IF NEW.adherence_percent < 85 AND NEW.method_used != 'Computed' THEN
         INSERT INTO alert (
             patient_id,
             alert_type,
-            alert_message,
-            severity,
-            status,
-            related_entity_type,
-            related_entity_id
+            alert_level,
+            alert_msg,
+            is_resolved
         ) VALUES (
             NEW.patient_id,
             'Low Adherence',
-            CONCAT('Low adherence detected: ', NEW.adherence_percentage, '%. Patient requires counseling.'),
             CASE 
-                WHEN NEW.adherence_percentage < 70 THEN 'Critical'
-                WHEN NEW.adherence_percentage < 80 THEN 'High'
-                ELSE 'Medium'
+                WHEN NEW.adherence_percent < 70 THEN 'Critical'
+                WHEN NEW.adherence_percent < 80 THEN 'Warning'
+                ELSE 'Info'
             END,
-            'Active',
-            'adherence_log',
-            NEW.adherence_id
+            CONCAT('Low adherence detected: ', NEW.adherence_percent, '%. Patient requires counseling.'),
+            FALSE
         );
     END IF;
 END//
