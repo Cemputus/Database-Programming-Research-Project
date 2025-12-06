@@ -9,6 +9,12 @@ CREATE DATABASE IF NOT EXISTS `hiv_patient_care`
   DEFAULT CHARACTER SET utf8mb4 
   DEFAULT COLLATE utf8mb4_unicode_ci;
 
+
+-- Showing the existing databases
+SHOW DATABASES;
+
+
+
 -- Use the database
 USE `hiv_patient_care`;
 
@@ -70,6 +76,7 @@ CREATE TABLE IF NOT EXISTS `patient` (
   CONSTRAINT `chk_art_after_enrollment` CHECK (`art_start_date` IS NULL OR `art_start_date` >= `enrollment_date`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+
 -- ============================================================================
 -- SUB TYPE: staff (Specialization from person)
 -- Stores staff-specific information
@@ -89,6 +96,8 @@ CREATE TABLE IF NOT EXISTS `staff` (
   UNIQUE KEY `uk_person_staff` (`person_id`),
   CONSTRAINT `fk_staff_person` FOREIGN KEY (`person_id`) REFERENCES `person` (`person_id`) ON DELETE RESTRICT ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
 
 -- ============================================================================
 -- ROLE TABLE
@@ -122,6 +131,9 @@ CREATE TABLE IF NOT EXISTS `staff_role` (
 -- Records clinical visits - compliant with HMIS 031 form
 -- Tracks vital signs, symptoms, and diagnoses
 -- ============================================================================
+
+
+show tables;
 
 CREATE TABLE IF NOT EXISTS `visit` (
   `visit_id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
