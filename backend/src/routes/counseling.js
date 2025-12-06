@@ -146,3 +146,5 @@ router.get('/patient/:patientId', async (req, res) => {
 
 module.exports = router;
 
+
+
