@@ -3,6 +3,8 @@
 -- HIV Patient Care & Treatment Monitoring System
 -- ============================================================================
 
+USE hiv_patient_care;
+
 -- ============================================================================
 -- Create Database Roles
 -- ============================================================================
@@ -30,17 +32,39 @@ CREATE ROLE 'db_patient';
 -- Full access: all tables, procedures, views, schema changes
 -- ============================================================================
 
-GRANT ALL PRIVILEGES ON *.* TO 'db_admin';
-GRANT SELECT, INSERT, UPDATE, DELETE ON *.* TO 'db_admin';
-GRANT EXECUTE ON PROCEDURE *.* TO 'db_admin';
-GRANT CREATE, ALTER, DROP, INDEX, CREATE VIEW, SHOW VIEW ON *.* TO 'db_admin';
+GRANT ALL PRIVILEGES ON hiv_patient_care.* TO 'db_admin';
+GRANT SELECT, INSERT, UPDATE, DELETE ON hiv_patient_care.* TO 'db_admin';
+GRANT CREATE, ALTER, DROP, INDEX, CREATE VIEW, SHOW VIEW ON hiv_patient_care.* TO 'db_admin';
+
+-- Grant execute on all stored procedures to db_admin
+GRANT EXECUTE ON PROCEDURE `sp_compute_adherence` TO 'db_admin';
+GRANT EXECUTE ON PROCEDURE `sp_check_overdue_vl` TO 'db_admin';
+GRANT EXECUTE ON PROCEDURE `sp_mark_missed_appointments` TO 'db_admin';
+GRANT EXECUTE ON PROCEDURE `sp_update_patient_status_ltfu` TO 'db_admin';
+GRANT EXECUTE ON PROCEDURE `sp_check_missed_refills` TO 'db_admin';
+GRANT EXECUTE ON PROCEDURE `sp_patient_dashboard` TO 'db_admin';
+GRANT EXECUTE ON PROCEDURE `sp_patient_visits` TO 'db_admin';
+GRANT EXECUTE ON PROCEDURE `sp_patient_lab_tests` TO 'db_admin';
+GRANT EXECUTE ON PROCEDURE `sp_patient_medications` TO 'db_admin';
+GRANT EXECUTE ON PROCEDURE `sp_patient_appointments` TO 'db_admin';
+GRANT EXECUTE ON PROCEDURE `sp_patient_adherence` TO 'db_admin';
+GRANT EXECUTE ON PROCEDURE `sp_patient_alerts` TO 'db_admin';
+GRANT EXECUTE ON PROCEDURE `sp_patient_progress_timeline` TO 'db_admin';
+GRANT EXECUTE ON PROCEDURE `sp_patient_next_appointment` TO 'db_admin';
+GRANT EXECUTE ON PROCEDURE `sp_patient_summary_stats` TO 'db_admin';
+GRANT EXECUTE ON PROCEDURE `sp_cag_add_patient` TO 'db_admin';
+GRANT EXECUTE ON PROCEDURE `sp_cag_remove_patient` TO 'db_admin';
+GRANT EXECUTE ON PROCEDURE `sp_cag_record_rotation` TO 'db_admin';
+GRANT EXECUTE ON PROCEDURE `sp_cag_get_members` TO 'db_admin';
+GRANT EXECUTE ON PROCEDURE `sp_cag_get_rotations` TO 'db_admin';
+GRANT EXECUTE ON PROCEDURE `sp_cag_get_statistics` TO 'db_admin';
 
 -- ============================================================================
 -- GRANT PRIVILEGES: db_clinician
 -- Clinical staff: read all, write to visit, appointment, patient, lab_test, adherence_log, alert
 -- ============================================================================
 
-GRANT SELECT ON *.* TO 'db_clinician';
+GRANT SELECT ON hiv_patient_care.* TO 'db_clinician';
 GRANT INSERT, UPDATE ON `visit` TO 'db_clinician';
 GRANT INSERT, UPDATE ON `appointment` TO 'db_clinician';
 GRANT INSERT, UPDATE ON `patient` TO 'db_clinician';
@@ -106,7 +130,7 @@ GRANT SELECT ON `alert` TO 'db_counselor';
 -- Records officers: read-only access to all tables and views
 -- ============================================================================
 
-GRANT SELECT ON *.* TO 'db_readonly';
+GRANT SELECT ON hiv_patient_care.* TO 'db_readonly';
 
 -- Read-only access to views
 GRANT SELECT ON `v_active_patients_summary` TO 'db_readonly';
