@@ -153,7 +153,6 @@ CREATE TABLE IF NOT EXISTS `visit` (
   KEY `idx_staff_visit` (`staff_id`),
   CONSTRAINT `fk_visit_patient` FOREIGN KEY (`patient_id`) REFERENCES `patient` (`patient_id`) ON DELETE RESTRICT ON UPDATE CASCADE,
   CONSTRAINT `fk_visit_staff` FOREIGN KEY (`staff_id`) REFERENCES `staff` (`staff_id`) ON DELETE RESTRICT ON UPDATE CASCADE,
-  CONSTRAINT `chk_visit_date_not_future` CHECK (`visit_date` <= CURDATE()),
   CONSTRAINT `chk_who_stage_range` CHECK (`who_stage` IS NULL OR (`who_stage` >= 1 AND `who_stage` <= 4))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -185,7 +184,6 @@ CREATE TABLE IF NOT EXISTS `lab_test` (
   CONSTRAINT `fk_lab_test_patient` FOREIGN KEY (`patient_id`) REFERENCES `patient` (`patient_id`) ON DELETE RESTRICT ON UPDATE CASCADE,
   CONSTRAINT `fk_lab_test_visit` FOREIGN KEY (`visit_id`) REFERENCES `visit` (`visit_id`) ON DELETE SET NULL ON UPDATE CASCADE,
   CONSTRAINT `fk_lab_test_staff` FOREIGN KEY (`staff_id`) REFERENCES `staff` (`staff_id`) ON DELETE RESTRICT ON UPDATE CASCADE,
-  CONSTRAINT `chk_test_date_not_future` CHECK (`test_date` <= CURDATE()),
   CONSTRAINT `chk_vl_result_non_negative` CHECK (`test_type` != 'Viral Load' OR `result_numeric` IS NULL OR `result_numeric` >= 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -227,9 +225,7 @@ CREATE TABLE IF NOT EXISTS `dispense` (
   CONSTRAINT `fk_dispense_patient` FOREIGN KEY (`patient_id`) REFERENCES `patient` (`patient_id`) ON DELETE RESTRICT ON UPDATE CASCADE,
   CONSTRAINT `fk_dispense_regimen` FOREIGN KEY (`regimen_id`) REFERENCES `regimen` (`regimen_id`) ON DELETE RESTRICT ON UPDATE CASCADE,
   CONSTRAINT `fk_dispense_staff` FOREIGN KEY (`staff_id`) REFERENCES `staff` (`staff_id`) ON DELETE RESTRICT ON UPDATE CASCADE,
-  CONSTRAINT `chk_dispense_date_not_future` CHECK (`dispense_date` <= CURDATE()),
-  CONSTRAINT `chk_days_supply_range` CHECK (`days_supply` > 0 AND `days_supply` <= 365),
-  CONSTRAINT `chk_next_refill_calc` CHECK (`next_refill_date` = DATE_ADD(`dispense_date`, INTERVAL `days_supply` DAY))
+  CONSTRAINT `chk_days_supply_range` CHECK (`days_supply` > 0 AND `days_supply` <= 365)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================================
@@ -347,8 +343,7 @@ CREATE TABLE IF NOT EXISTS `cag_rotation` (
   KEY `idx_pickup_patient` (`pickup_patient_id`),
   CONSTRAINT `fk_rotation_cag` FOREIGN KEY (`cag_id`) REFERENCES `cag` (`cag_id`) ON DELETE RESTRICT ON UPDATE CASCADE,
   CONSTRAINT `fk_rotation_patient` FOREIGN KEY (`pickup_patient_id`) REFERENCES `patient` (`patient_id`) ON DELETE RESTRICT ON UPDATE CASCADE,
-  CONSTRAINT `fk_rotation_dispense` FOREIGN KEY (`dispense_id`) REFERENCES `dispense` (`dispense_id`) ON DELETE SET NULL ON UPDATE CASCADE,
-  CONSTRAINT `chk_rotation_date_not_future` CHECK (`rotation_date` <= CURDATE())
+  CONSTRAINT `fk_rotation_dispense` FOREIGN KEY (`dispense_id`) REFERENCES `dispense` (`dispense_id`) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================================
