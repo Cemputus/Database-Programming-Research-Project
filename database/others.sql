@@ -9,4 +9,4 @@ USE hiv_patient_care;
 
 SHOW tables;
 
-SELECT * FROM visit LIMIT 5;
+SELECT * FROM person LIMIT 5;
