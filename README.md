@@ -32,18 +32,21 @@
 - **All names, addresses, and contact information** are **dummy data** and do not correspond to real individuals
 
 **This system is intended for:**
+
 - ✅ Academic research and learning
 - ✅ System development and testing
 - ✅ Database design demonstration
 - ✅ Software engineering education
 
 **This system is NOT intended for:**
+
 - ❌ Production use with real patient data
 - ❌ Clinical decision-making
 - ❌ Storage of actual health records
 - ❌ Any real-world healthcare operations
 
 **Before using this system with real data, you MUST:**
+
 1. Remove all dummy/seed data
 2. Implement proper data privacy and security measures
 3. Comply with local healthcare data protection regulations (e.g., Uganda Data Protection Act)
@@ -68,14 +71,14 @@
 - [Configuration](#-configuration)
 - [Usage Guide](#-usage-guide)
 - [API Reference](#-api-reference)
-- [Security & Access Control](#-security--access-control)
+- [Security &amp; Access Control](#-security--access-control)
 - [Database Components](#-database-components)
-- [Testing & Verification](#-testing--verification)
+- [Testing &amp; Verification](#-testing--verification)
 - [Troubleshooting](#-troubleshooting)
 - [Project Structure](#-project-structure)
 - [Contributing](#-contributing)
 - [License](#-license)
-- [Contact & Support](#-contact--support)
+- [Contact &amp; Support](#-contact--support)
 
 ---
 
@@ -94,26 +97,27 @@ In this context, many health facilities — especially at lower levels (health c
 #### Critical Limitations
 
 1. **Fragmented Patient Histories**
+
    - Patient histories are fragmented or lost, making longitudinal tracking (over months/years) difficult
    - No centralized view of a patient's complete care journey
    - Historical data is often incomplete or inaccessible
-
 2. **Lack of Automated Alerts**
+
    - Missed appointments, drug refills, or lab tests are not automatically flagged
    - Leads to lapses in treatment adherence or follow-up
    - Critical interventions are delayed or missed entirely
-
 3. **Data Silos**
+
    - Viral load test results, CD4 counts, comorbid conditions (e.g., opportunistic infections, TB) are stored in separate registries or lab ledgers
    - Makes integrated patient care difficult
    - Clinicians cannot see the full picture of a patient's health status
-
 4. **Informal Tracking**
+
    - Counselling, psychosocial support, and adherence monitoring are often done in informal notes
    - No centralized tracking of adherence interventions
    - Difficult to measure effectiveness of counseling programs
-
 5. **Inefficient Reporting**
+
    - Data retrieval for reporting, audits, or research is slow, incomplete, or inaccurate
    - Impedes evidence-based decision making and public health response
    - Delays in identifying trends and outbreaks
@@ -130,6 +134,7 @@ These limitations can lead to:
 - ❌ **Reduced Quality of Care** - Overall system inefficiencies impact patient outcomes
 
 For a populous country like Uganda with **~1.5 million people living with HIV**, such gaps in care management represent a significant risk to both:
+
 - **Individual patient outcomes** - Poor health outcomes, treatment failure, preventable deaths
 - **National HIV control goals** - Viral suppression targets, reduced new infections, better retention in care
 
@@ -140,31 +145,32 @@ Therefore, there is a **critical need** for a robust, **digital HIV Patient Care
 #### Core Requirements
 
 1. **Longitudinal Tracking**
+
    - Complete tracking of every patient's clinical visits, lab results, ART dispensing, counselling and adherence
    - Historical data accessible in one place
    - Timeline view of patient care journey
-
 2. **Automated Alerts**
+
    - Automated alerts for missed appointments, overdue viral load tests, drug refills, or high-risk lab results
    - Proactive intervention triggers
    - Real-time notifications for critical events
-
 3. **Integrated Modules**
+
    - Integration across modules (clinical, lab, pharmacy, counseling) so that data silos are eliminated
    - Single source of truth for patient data
    - Seamless data flow between departments
-
 4. **Secure Access Control**
+
    - Secure access control (roles for doctors, nurses, lab staff, pharmacists, counsellors) to maintain confidentiality and data integrity
    - Role-based permissions
    - Audit trails for compliance
-
 5. **Reliable Reporting**
+
    - Reliable reporting capabilities for clinic management, public health authorities, and research
    - Real-time dashboards
    - Export capabilities for HMIS reporting
-
 6. **Improved Outcomes**
+
    - Improved continuity of care, better adherence, earlier detection of complications
    - Ultimately improved health outcomes for people living with HIV
    - Support for national HIV response goals
@@ -174,22 +180,23 @@ Therefore, there is a **critical need** for a robust, **digital HIV Patient Care
 This problem is particularly well-suited for a comprehensive database solution because:
 
 1. **Massive Scale**
+
    - **1.49 million people** living with HIV in Uganda
    - Many clinics across the country need this system
    - Requires scalable, efficient data management
-
 2. **Complexity**
+
    - Multiple data types (demographics, clinical, lab, pharmacy, counselling)
    - Needs relational design, data integrity, security, user roles
    - Requires advanced database concepts (ER/EER, normalization, constraints, stored procedures, user roles)
-
 3. **Real-World Relevance**
+
    - Improving this system has **direct impact on health outcomes**
    - Aligns with **SDG 3: Good Health and Well‑being**
    - Supports national HIV response goals
    - Addresses a critical public health need
-
 4. **Technical Challenge**
+
    - Modeling longitudinal data (patient histories over years)
    - Ensuring data privacy and security
    - Designing triggers/alerts for automated interventions
@@ -215,12 +222,6 @@ This problem is particularly well-suited for a comprehensive database solution b
 - ✅ Progress toward national HIV control goals
 
 ### References
-
-[1]: https://uniph.go.ug/trends-and-distribution-of-hiv-incidence-among-children-aged-0-14-years-uganda-2015-2023/ "Trends and distribution of HIV incidence among children aged 0-14 years, Uganda 2015-2023"
-
-[2]: https://www.parliament.go.ug/news/3576/uganda-aids-commission-needs-shs300-billion-bridge-hiv-funding-gap "Uganda Aids Commission needs Shs300 billion to bridge HIV funding gap"
-
-[3]: https://www.beintheknow.org/understanding-hiv-epidemic/data/glance-hiv-uganda "At a glance: HIV in Uganda | Be in the KNOW"
 
 ---
 
@@ -255,39 +256,46 @@ This system addresses critical healthcare management needs in Uganda's HIV treat
 ## ✨ Key Features
 
 ### 🏥 Patient Management
+
 - **Demographic Tracking**: Complete patient information with Uganda NIN integration
 - **Enrollment Management**: Track patient enrollment dates and ART initiation
 - **Status Tracking**: Monitor patient status (Active, Transferred-Out, LTFU, Dead)
 - **Location Hierarchy**: District → Subcounty → Parish → Village tracking for community tracing
 
 ### 🔬 Clinical Operations
+
 - **Clinical Visits**: HMIS 031 compliant visit records with vital signs, symptoms, and diagnoses
 - **Laboratory Tests**: Comprehensive test management (Viral Load, CD4, HB, Creatinine, Malaria RDT, TB-LAM, Urinalysis)
 - **CPHL Integration**: Viral load sample tracking with CPHL sample IDs
 - **WHO Staging**: Clinical staging (1-4) for patient assessment
 
 ### 💊 Pharmacy Management
+
 - **Regimen Catalog**: Uganda MOH standard ART regimens (First Line, Second Line, Third Line)
 - **Dispensing Records**: Track medication dispensing with days supply and refill dates
 - **Refill Management**: Automated tracking of medication refills and overdue alerts
 
 ### 📅 Appointment & Scheduling
+
 - **Appointment Management**: Schedule, track, and manage patient appointments
 - **Status Tracking**: Monitor appointment status (Scheduled, Attended, Missed, Rescheduled, Cancelled)
 - **Missed Visit Alerts**: Automated alerts for missed appointments
 
 ### 💬 Counseling & Adherence
+
 - **Counseling Sessions**: Record counseling sessions with topics and adherence barriers
 - **Adherence Tracking**: Multiple assessment methods (Pill Count, Pharmacy Refill, Self Report, CAG Report, Computed)
 - **Adherence Analytics**: Track adherence percentages and identify patients needing support
 
 ### 👥 Community ART Groups (CAGs)
+
 - **CAG Management**: Create and manage Community ART Groups for decentralized care
 - **Member Tracking**: Track patient membership and roles (Member, Coordinator, Deputy Coordinator)
 - **Rotation System**: Record medication pickup rotations for group members
 - **Performance Metrics**: Monitor CAG adherence and viral load suppression rates
 
 ### 🚨 Automated Alerts
+
 - **High Viral Load**: Critical alerts for viral loads > 1000 copies/mL
 - **Overdue VL Tests**: Warnings for patients overdue for viral load testing (>180 days)
 - **Missed Appointments**: Alerts for missed scheduled appointments
@@ -296,12 +304,14 @@ This system addresses critical healthcare management needs in Uganda's HIV treat
 - **Severe OI**: Critical alerts for severe opportunistic infections
 
 ### 📊 Reporting & Analytics
+
 - **Role-Based Analysis**: Comprehensive analytics tailored to each user role
 - **Patient Dashboards**: Complete patient overview with key metrics
 - **System Reports**: Activity summaries, demographic reports, and performance metrics
 - **Data Verification**: Automated data integrity and consistency checks
 
 ### 🔐 Security & Access Control
+
 - **Role-Based Access Control (RBAC)**: Granular permissions based on user roles
 - **Database Roles**: 7 distinct roles (Admin, Clinician, Lab, Pharmacy, Counselor, Read-Only, Patient)
 - **Audit Logging**: Complete audit trail of all data changes
@@ -354,17 +364,18 @@ This system addresses critical healthcare management needs in Uganda's HIV treat
 The system uses an **Enhanced Entity Relationship (EER) Model** with:
 
 1. **Generalization (Supertype/Subtype)**
+
    - `person` (supertype) → `patient` and `staff` (subtypes)
    - Eliminates data duplication and ensures consistency
-
 2. **Overlapping Specialization**
+
    - `staff` can have multiple `roles` simultaneously
    - Enables flexible access control
-
 3. **Disjoint Categorization**
-   - Patient status: Active, Transferred-Out, LTFU, Dead (mutually exclusive)
 
+   - Patient status: Active, Transferred-Out, LTFU, Dead (mutually exclusive)
 4. **Categorization**
+
    - Lab test types, alert types, adherence methods
 
 ---
@@ -372,6 +383,7 @@ The system uses an **Enhanced Entity Relationship (EER) Model** with:
 ## 🛠️ Technology Stack
 
 ### Backend
+
 - **Runtime**: Node.js 18+
 - **Framework**: Express.js 4.18+
 - **ORM**: Prisma 5.7+
@@ -380,11 +392,13 @@ The system uses an **Enhanced Entity Relationship (EER) Model** with:
 - **CORS**: Enabled for cross-origin requests
 
 ### Database
+
 - **RDBMS**: MySQL 8.0+
 - **Character Set**: UTF8MB4 (Unicode support)
 - **Storage Engine**: InnoDB (ACID compliance)
 
 ### Development Tools
+
 - **Package Manager**: npm
 - **Database Client**: MySQL Command Line / MySQL Workbench
 - **API Testing**: cURL, Postman, or similar
@@ -395,25 +409,25 @@ The system uses an **Enhanced Entity Relationship (EER) Model** with:
 
 ### Core Tables (17)
 
-| Table | Description | Key Relationships |
-|-------|-------------|-------------------|
-| `person` | Supertype for all people (patients & staff) | Root table |
-| `patient` | HIV patient records | → person (1:1) |
-| `staff` | Healthcare staff records | → person (1:1) |
-| `role` | System access roles | → staff_role (many:many) |
-| `staff_role` | Staff-role assignments | Junction table |
-| `visit` | Clinical visit records | → patient, staff |
-| `lab_test` | Laboratory test results | → patient, visit, staff |
-| `regimen` | ART regimen catalog | → dispense |
-| `dispense` | Medication dispensing records | → patient, regimen, staff |
-| `appointment` | Appointment scheduling | → patient, staff |
-| `counseling_session` | Counseling session records | → patient, staff |
-| `cag` | Community ART Groups | → patient (coordinator), staff |
-| `patient_cag` | Patient-CAG memberships | Junction table |
-| `cag_rotation` | CAG medication pickup rotations | → cag, patient, dispense |
-| `adherence_log` | Medication adherence assessments | → patient |
-| `alert` | Automated alerts | → patient |
-| `audit_log` | Audit trail of data changes | → staff |
+| Table                  | Description                                 | Key Relationships               |
+| ---------------------- | ------------------------------------------- | ------------------------------- |
+| `person`             | Supertype for all people (patients & staff) | Root table                      |
+| `patient`            | HIV patient records                         | → person (1:1)                 |
+| `staff`              | Healthcare staff records                    | → person (1:1)                 |
+| `role`               | System access roles                         | → staff_role (many:many)       |
+| `staff_role`         | Staff-role assignments                      | Junction table                  |
+| `visit`              | Clinical visit records                      | → patient, staff               |
+| `lab_test`           | Laboratory test results                     | → patient, visit, staff        |
+| `regimen`            | ART regimen catalog                         | → dispense                     |
+| `dispense`           | Medication dispensing records               | → patient, regimen, staff      |
+| `appointment`        | Appointment scheduling                      | → patient, staff               |
+| `counseling_session` | Counseling session records                  | → patient, staff               |
+| `cag`                | Community ART Groups                        | → patient (coordinator), staff |
+| `patient_cag`        | Patient-CAG memberships                     | Junction table                  |
+| `cag_rotation`       | CAG medication pickup rotations             | → cag, patient, dispense       |
+| `adherence_log`      | Medication adherence assessments            | → patient                      |
+| `alert`              | Automated alerts                            | → patient                      |
+| `audit_log`          | Audit trail of data changes                 | → staff                        |
 
 ### Key Relationships
 
@@ -456,11 +470,13 @@ cd Database-Programming-Research-Project
 #### Option A: Automated Setup (Recommended)
 
 **Windows (PowerShell):**
+
 ```powershell
 .\setup-database.ps1
 ```
 
 **Linux/Mac (Bash):**
+
 ```bash
 chmod +x setup-database.sh
 ./setup-database.sh
@@ -469,11 +485,13 @@ chmod +x setup-database.sh
 #### Option B: Manual Setup
 
 **Using Combined File (Easiest):**
+
 ```bash
 mysql -u root -p < database/hiv_patient_care.sql
 ```
 
 **Using Individual Files (Step-by-Step):**
+
 ```bash
 # Create database
 mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS hiv_patient_care;"
@@ -564,19 +582,20 @@ event-scheduler=ON
 
 **Environment Variables**:
 
-| Variable | Description | Default | Required |
-|----------|-------------|---------|----------|
-| `DATABASE_URL` | MySQL connection string | - | ✅ Yes |
-| `JWT_SECRET` | Secret key for JWT tokens | - | ✅ Yes |
-| `PORT` | Server port | 3000 | ❌ No |
-| `NODE_ENV` | Environment mode | development | ❌ No |
-| `CORS_ORIGIN` | Allowed CORS origin | * | ❌ No |
+| Variable         | Description               | Default     | Required |
+| ---------------- | ------------------------- | ----------- | -------- |
+| `DATABASE_URL` | MySQL connection string   | -           | ✅ Yes   |
+| `JWT_SECRET`   | Secret key for JWT tokens | -           | ✅ Yes   |
+| `PORT`         | Server port               | 3000        | ❌ No    |
+| `NODE_ENV`     | Environment mode          | development | ❌ No    |
+| `CORS_ORIGIN`  | Allowed CORS origin       | *           | ❌ No    |
 
 ### Role Configuration
 
 Default roles are created automatically. To customize, edit `database/security.sql`.
 
 **Available Roles**:
+
 - `db_admin` - Full system access
 - `db_clinician` - Clinical operations
 - `db_lab` - Laboratory operations
@@ -592,27 +611,29 @@ Default roles are created automatically. To customize, edit `database/security.s
 ### Starting the System
 
 1. **Start MySQL Server**
+
    ```bash
    # Windows (if installed as service, it should auto-start)
    # Linux/Mac
    sudo systemctl start mysql
    ```
-
 2. **Start Backend Server**
+
    ```bash
    cd backend
    npm run dev  # Development mode with auto-reload
    # OR
    npm start    # Production mode
    ```
-
 3. **Access API**
+
    - Base URL: `http://localhost:3000/api`
    - Health Check: `http://localhost:3000/api/health`
 
 ### Authentication
 
 **Login Endpoint:**
+
 ```bash
 POST /api/auth/login
 Content-Type: application/json
@@ -624,6 +645,7 @@ Content-Type: application/json
 ```
 
 **Response:**
+
 ```json
 {
   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
@@ -639,6 +661,7 @@ Content-Type: application/json
 ```
 
 **Using Token:**
+
 ```bash
 Authorization: Bearer <token>
 ```
@@ -646,12 +669,14 @@ Authorization: Bearer <token>
 ### Common Operations
 
 **Get Patient List:**
+
 ```bash
 GET /api/patients
 Authorization: Bearer <token>
 ```
 
 **Create Visit:**
+
 ```bash
 POST /api/visits
 Authorization: Bearer <token>
@@ -667,6 +692,7 @@ Content-Type: application/json
 ```
 
 **Record Lab Test:**
+
 ```bash
 POST /api/lab-tests
 Authorization: Bearer <token>
@@ -689,12 +715,15 @@ For complete API documentation, see [API Reference](#-api-reference).
 ## 📡 API Reference
 
 ### Base URL
+
 ```
 http://localhost:3000/api
 ```
 
 ### Authentication
+
 All protected endpoints require a JWT token in the Authorization header:
+
 ```
 Authorization: Bearer <token>
 ```
@@ -702,11 +731,13 @@ Authorization: Bearer <token>
 ### Endpoints
 
 #### Authentication
+
 - `POST /api/auth/login` - Staff login
 - `POST /api/auth/register` - Register new staff (admin only)
 - `GET /api/auth/me` - Get current user info
 
 #### Patients
+
 - `GET /api/patients` - List all patients
 - `GET /api/patients/:id` - Get patient details
 - `POST /api/patients` - Create new patient
@@ -714,44 +745,52 @@ Authorization: Bearer <token>
 - `GET /api/patients/:id/dashboard` - Get patient dashboard
 
 #### Visits
+
 - `GET /api/visits` - List visits
 - `GET /api/visits/:id` - Get visit details
 - `POST /api/visits` - Create visit
 - `PUT /api/visits/:id` - Update visit
 
 #### Lab Tests
+
 - `GET /api/lab-tests` - List lab tests
 - `GET /api/lab-tests/:id` - Get test details
 - `POST /api/lab-tests` - Record lab test
 - `PUT /api/lab-tests/:id` - Update test result
 
 #### Pharmacy
+
 - `GET /api/pharmacy/dispenses` - List dispenses
 - `POST /api/pharmacy/dispense` - Record dispense
 - `GET /api/pharmacy/regimens` - List regimens
 - `GET /api/pharmacy/overdue-refills` - Get overdue refills
 
 #### Appointments
+
 - `GET /api/appointments` - List appointments
 - `POST /api/appointments` - Schedule appointment
 - `PUT /api/appointments/:id` - Update appointment status
 
 #### Alerts
+
 - `GET /api/alerts` - List alerts
 - `GET /api/alerts/active` - Get active alerts
 - `PUT /api/alerts/:id/resolve` - Resolve alert
 
 #### CAG (Community ART Groups)
+
 - `GET /api/cag` - List CAGs
 - `POST /api/cag` - Create CAG
 - `POST /api/cag/:id/add-patient` - Add patient to CAG
 - `GET /api/cag/:id/members` - Get CAG members
 
 #### Adherence
+
 - `GET /api/adherence` - List adherence records
 - `POST /api/adherence` - Record adherence assessment
 
 #### Counseling
+
 - `GET /api/counseling` - List counseling sessions
 - `POST /api/counseling` - Create counseling session
 
@@ -765,30 +804,31 @@ For detailed endpoint documentation with request/response examples, see [`backen
 
 The system implements granular access control through database roles:
 
-| Role | Permissions | Use Case |
-|------|-------------|----------|
-| **db_admin** | Full system access (SELECT, INSERT, UPDATE, DELETE, CREATE, ALTER, DROP) | System administrators |
+| Role                   | Permissions                                                                         | Use Case                           |
+| ---------------------- | ----------------------------------------------------------------------------------- | ---------------------------------- |
+| **db_admin**     | Full system access (SELECT, INSERT, UPDATE, DELETE, CREATE, ALTER, DROP)            | System administrators              |
 | **db_clinician** | Read all, write to visits, appointments, patients, lab_tests, adherence_log, alerts | Doctors, Clinical Officers, Nurses |
-| **db_lab** | Read patient/staff data, write lab_test results | Lab Technicians |
-| **db_pharmacy** | Read patient/regimen data, write dispense records | Pharmacists |
-| **db_counselor** | Read patient data, write counseling_session, adherence_log, appointments | Counselors |
-| **db_readonly** | Read-only access to all tables and views | Records Officers, Reporters |
-| **db_patient** | Read-only access to own data via views and procedures | Patient self-service |
+| **db_lab**       | Read patient/staff data, write lab_test results                                     | Lab Technicians                    |
+| **db_pharmacy**  | Read patient/regimen data, write dispense records                                   | Pharmacists                        |
+| **db_counselor** | Read patient data, write counseling_session, adherence_log, appointments            | Counselors                         |
+| **db_readonly**  | Read-only access to all tables and views                                            | Records Officers, Reporters        |
+| **db_patient**   | Read-only access to own data via views and procedures                               | Patient self-service               |
 
 ### Default Users (from DUMMY seed data)
 
 > **⚠️ DISCLAIMER**: These are **TEST ACCOUNTS** created from synthetic/dummy data. All user credentials, staff records, and associated data are **FABRICATED FOR TESTING PURPOSES ONLY**. Do not use these accounts in production.
 
-| Username | Password | Role | Description |
-|----------|----------|------|-------------|
-| `nsubuga@localhost` | `admin123` | db_admin | System Administrator (DUMMY) |
-| `doctor1@localhost` | `doctor123` | db_clinician | Clinician (DUMMY) |
-| `lab_tech1@localhost` | `lab_tech123` | db_lab | Lab Technician (DUMMY) |
-| `pharmacist1@localhost` | `pharmacist1` | db_pharmacy | Pharmacist (DUMMY) |
-| `counselor1@localhost` | `counselor1` | db_counselor | Counselor (DUMMY) |
-| `records_officer1@localhost` | `records_officer1` | db_readonly | Records Officer (DUMMY) |
+| Username                       | Password             | Role         | Description                  |
+| ------------------------------ | -------------------- | ------------ | ---------------------------- |
+| `nsubuga@localhost`          | `admin123`         | db_admin     | System Administrator (DUMMY) |
+| `doctor1@localhost`          | `doctor123`        | db_clinician | Clinician (DUMMY)            |
+| `lab_tech1@localhost`        | `lab_tech123`      | db_lab       | Lab Technician (DUMMY)       |
+| `pharmacist1@localhost`      | `pharmacist1`      | db_pharmacy  | Pharmacist (DUMMY)           |
+| `counselor1@localhost`       | `counselor1`       | db_counselor | Counselor (DUMMY)            |
+| `records_officer1@localhost` | `records_officer1` | db_readonly  | Records Officer (DUMMY)      |
 
-> **⚠️ Security Warning**: 
+> **⚠️ Security Warning**:
+>
 > - These are **TEST CREDENTIALS ONLY** - all data is synthetic
 > - **NEVER** use these credentials in production
 > - **ALWAYS** change default passwords before production deployment
@@ -797,6 +837,7 @@ The system implements granular access control through database roles:
 ### Audit Logging
 
 All data modifications are automatically logged in the `audit_log` table:
+
 - **Action**: INSERT, UPDATE, DELETE
 - **Table**: Affected table name
 - **Record ID**: Primary key of modified record
@@ -819,18 +860,21 @@ All data modifications are automatically logged in the `audit_log` table:
 Views provide simplified access to complex queries:
 
 **Clinical Views:**
+
 - `v_active_patients_summary` - Active patients with key metrics
 - `v_patient_care_timeline` - Chronological patient events
 - `v_viral_load_monitoring` - VL status and test scheduling
 - `v_adherence_summary` - Latest adherence assessments
 
 **CAG Views:**
+
 - `v_cag_summary` - CAG overview with member counts
 - `v_cag_members` - Active CAG members
 - `v_cag_rotation_history` - CAG rotation records
 - `v_cag_performance` - CAG performance metrics
 
 **Patient Self-Service Views:**
+
 - `v_patient_dashboard` - Complete patient overview
 - `v_patient_visit_history` - Clinical visit history
 - `v_patient_lab_history` - Lab test results
@@ -841,12 +885,14 @@ Views provide simplified access to complex queries:
 - `v_patient_progress_timeline` - Complete care timeline
 
 **System Views:**
+
 - `v_active_alerts_summary` - All unresolved alerts
 - `v_staff_with_roles` - Staff with assigned roles
 
 ### Stored Procedures (21)
 
 **Patient Self-Service:**
+
 - `sp_patient_dashboard` - Get patient dashboard data
 - `sp_patient_visits` - Get visit history
 - `sp_patient_lab_tests` - Get lab test history
@@ -859,6 +905,7 @@ Views provide simplified access to complex queries:
 - `sp_patient_summary_stats` - Get summary statistics
 
 **Clinical Operations:**
+
 - `sp_compute_adherence` - Calculate adherence percentage
 - `sp_check_overdue_vl` - Check for overdue VL tests
 - `sp_mark_missed_appointments` - Mark missed appointments
@@ -866,6 +913,7 @@ Views provide simplified access to complex queries:
 - `sp_check_missed_refills` - Check for missed refills
 
 **CAG Management:**
+
 - `sp_cag_add_patient` - Add patient to CAG
 - `sp_cag_remove_patient` - Remove patient from CAG
 - `sp_cag_record_rotation` - Record CAG rotation
@@ -876,12 +924,14 @@ Views provide simplified access to complex queries:
 ### Triggers (8)
 
 **Alert Triggers:**
+
 - `trg_lab_test_high_vl_alert` - Creates alert on high VL (>1000)
 - `trg_lab_test_high_vl_alert_update` - Creates alert on VL update
 - `trg_appointment_missed_alert` - Creates alert on missed appointment
 - `trg_adherence_low_alert` - Creates alert on low adherence (<85%)
 
 **Audit Triggers:**
+
 - `trg_patient_audit_insert` - Logs patient creation
 - `trg_patient_audit_update` - Logs patient updates
 - `trg_visit_audit_insert` - Logs visit creation
@@ -892,12 +942,14 @@ Views provide simplified access to complex queries:
 ### Scheduled Events (5)
 
 **Daily Events:**
+
 - `evt_daily_check_overdue_vl` - Checks for overdue VL tests (8 AM)
 - `evt_daily_check_missed_appointments` - Marks missed appointments (8 AM)
 - `evt_daily_check_missed_refills` - Checks for missed refills (8 AM)
 - `evt_daily_update_ltfu` - Updates LTFU status (7 AM)
 
 **Weekly Events:**
+
 - `evt_weekly_compute_adherence` - Computes adherence for all patients (9 AM, weekly)
 
 > **Note**: Events require `event_scheduler = ON` in MySQL configuration.
@@ -917,6 +969,7 @@ mysql -u root -p hiv_patient_care < database/verify_data.sql
 > **⚠️ Note**: This verification is for **SYNTHETIC/DUMMY DATA ONLY**. All records are fabricated for testing purposes.
 
 This script checks:
+
 - ✅ Table record counts
 - ✅ Foreign key integrity
 - ✅ Data consistency
@@ -939,11 +992,13 @@ mysql -u pharmacist1 -ppharmacist1 hiv_patient_care < database/role_based_analys
 ### API Testing
 
 **Health Check:**
+
 ```bash
 curl http://localhost:3000/api/health
 ```
 
 **Login Test:**
+
 ```bash
 curl -X POST http://localhost:3000/api/auth/login \
   -H "Content-Type: application/json" \
@@ -951,6 +1006,7 @@ curl -X POST http://localhost:3000/api/auth/login \
 ```
 
 **Get Patients (with token):**
+
 ```bash
 curl http://localhost:3000/api/patients \
   -H "Authorization: Bearer <your-token>"
@@ -959,6 +1015,7 @@ curl http://localhost:3000/api/patients \
 ### Performance Testing
 
 **Check Database Performance:**
+
 ```sql
 -- View table sizes
 SELECT 
@@ -984,21 +1041,23 @@ SHOW INDEX FROM visit;
 **Error**: `ER_ACCESS_DENIED_ERROR` or `ECONNREFUSED`
 
 **Solutions**:
+
 1. Verify MySQL is running:
+
    ```bash
    # Windows
    net start MySQL80
-   
+
    # Linux/Mac
    sudo systemctl status mysql
    ```
-
 2. Check credentials in `.env`:
+
    ```env
    DATABASE_URL="mysql://username:password@localhost:3306/hiv_patient_care"
    ```
-
 3. Verify database exists:
+
    ```sql
    SHOW DATABASES;
    USE hiv_patient_care;
@@ -1010,6 +1069,7 @@ SHOW INDEX FROM visit;
 **Error**: `Cannot add or update a child row: a foreign key constraint fails`
 
 **Solutions**:
+
 1. Ensure parent records exist (e.g., person before patient)
 2. Check data insertion order matches schema dependencies
 3. Verify foreign key values are valid
@@ -1019,6 +1079,7 @@ SHOW INDEX FROM visit;
 **Error**: `Trigger execution failed`
 
 **Solutions**:
+
 1. Check trigger definitions in `database/triggers.sql`
 2. Verify referenced tables exist
 3. Check trigger syntax for MySQL 8.0+ compatibility
@@ -1028,12 +1089,14 @@ SHOW INDEX FROM visit;
 **Error**: Events not executing
 
 **Solutions**:
+
 1. Enable event scheduler:
+
    ```sql
    SET GLOBAL event_scheduler = ON;
    ```
-
 2. Check event status:
+
    ```sql
    SHOW EVENTS;
    SELECT * FROM information_schema.EVENTS;
@@ -1044,6 +1107,7 @@ SHOW INDEX FROM visit;
 **Error**: `Invalid token` or `Token expired`
 
 **Solutions**:
+
 1. Verify `JWT_SECRET` in `.env` matches between restarts
 2. Check token expiration time
 3. Ensure token is sent in Authorization header:
@@ -1056,14 +1120,16 @@ SHOW INDEX FROM visit;
 **Error**: `PrismaClientInitializationError`
 
 **Solutions**:
+
 1. Regenerate Prisma client:
+
    ```bash
    cd backend
    npx prisma generate
    ```
-
 2. Verify `DATABASE_URL` in `.env`
 3. Check database connection:
+
    ```bash
    npx prisma db pull
    ```
@@ -1071,11 +1137,13 @@ SHOW INDEX FROM visit;
 ### Performance Issues
 
 **Slow Queries:**
+
 - Check indexes: `SHOW INDEX FROM <table>;`
 - Analyze query execution: `EXPLAIN SELECT ...;`
 - Review table statistics: `ANALYZE TABLE <table>;`
 
 **Large Dataset:**
+
 - Consider partitioning for large tables
 - Optimize indexes based on query patterns
 - Use views for complex queries
@@ -1209,6 +1277,7 @@ See `LICENSE` file for details.
 ### Reporting Issues
 
 When reporting issues, please include:
+
 - **Environment**: MySQL version, Node.js version, OS
 - **Steps to Reproduce**: Detailed steps
 - **Expected Behavior**: What should happen
@@ -1229,8 +1298,12 @@ When reporting issues, please include:
 
 <div align="center">
 
-**Built with ❤️ for improving HIV patient care in Uganda**
+**Built for improving HIV patient care in Uganda(Academic purposes)**
 
 [⬆ Back to Top](#-table-of-contents)
 
 </div>
+
+[1]: https://uniph.go.ug/trends-and-distribution-of-hiv-incidence-among-children-aged-0-14-years-uganda-2015-2023/
+[2]: https://www.parliament.go.ug/news/3576/uganda-aids-commission-needs-shs300-billion-bridge-hiv-funding-gap
+[3]: https://www.beintheknow.org/understanding-hiv-epidemic/data/glance-hiv-uganda
