@@ -120,16 +120,20 @@ router.get('/me', authenticate, async (req, res) => {
       return res.status(404).json({ error: 'Staff not found.' });
     }
 
+    if (!staff.person) {
+      return res.status(500).json({ error: 'Staff person data not found.' });
+    }
+
     res.json({
       staffId: staff.staffId,
       staffCode: staff.staffCode,
       name: `${staff.person.firstName} ${staff.person.lastName}`,
-      email: staff.person.email || null,
-      phone: staff.person.phoneNumber || null,
+      email: null, // Email not in schema
+      phone: staff.person.phoneContact || null,
       cadre: staff.cadre,
       moHRegistrationNo: staff.moHRegistrationNo,
       active: staff.active,
-      roles: staff.staffRoles.map(sr => sr.role.roleName)
+      roles: (staff.staffRoles || []).map(sr => sr.role?.roleName).filter(Boolean)
     });
   } catch (error) {
     console.error('Get me error:', error);

@@ -231,7 +231,7 @@ router.get('/:id/timeline', async (req, res) => {
       }),
       prisma.appointment.findMany({
         where: { patientId },
-        orderBy: { appointmentDate: 'desc' },
+        orderBy: { scheduledDate: 'desc' },
       }),
     ]);
 
@@ -240,19 +240,19 @@ router.get('/:id/timeline', async (req, res) => {
         eventType: 'Visit',
         eventDate: v.visitDate,
         description: `Clinical visit`,
-        staffName: `${v.staff.person.firstName} ${v.staff.person.lastName}`,
+        staffName: v.staff?.person ? `${v.staff.person.firstName} ${v.staff.person.lastName}` : null,
       })),
       ...labTests.map(lt => ({
         eventType: 'Lab Test',
         eventDate: lt.testDate,
-        description: `${lt.testType} - ${lt.resultValue || 'Pending'}`,
+        description: `${lt.testType} - ${lt.resultNumeric || lt.resultText || 'Pending'}`,
         staffName: null,
       })),
       ...dispenses.map(d => ({
         eventType: 'Dispense',
         eventDate: d.dispenseDate,
-        description: `Medication dispensed - ${d.regimen.regimenName} (${d.daysSupply} days)`,
-        staffName: `${d.staff.person.firstName} ${d.staff.person.lastName}`,
+        description: `Medication dispensed - ${d.regimen?.regimenName || 'Unknown'} (${d.daysSupply} days)`,
+        staffName: d.staff?.person ? `${d.staff.person.firstName} ${d.staff.person.lastName}` : null,
       })),
       ...appointments.map(a => ({
         eventType: 'Appointment',

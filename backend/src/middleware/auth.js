@@ -42,7 +42,7 @@ const authenticate = async (req, res, next) => {
 
       // Attach staff and roles to request
       req.staff = staff;
-      req.roles = staff.staffRoles.map(sr => sr.role.roleName);
+      req.roles = (staff.staffRoles || []).map(sr => sr.role?.roleName).filter(Boolean);
       
       next();
     } catch (error) {
@@ -129,7 +129,7 @@ const optionalAuth = async (req, res, next) => {
 
         if (staff && staff.active) {
           req.staff = staff;
-          req.roles = staff.staffRoles.map(sr => sr.role.roleName);
+          req.roles = (staff.staffRoles || []).map(sr => sr.role?.roleName).filter(Boolean);
         }
       } catch (error) {
         // Token invalid or expired - continue without authentication
