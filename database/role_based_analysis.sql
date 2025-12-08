@@ -6,12 +6,74 @@
 -- This file contains comprehensive analysis queries organized by user role
 -- Each role has access to specific analyses relevant to their responsibilities
 -- ============================================================================
+-- 
+-- IMPORTANT: LOGIN INSTRUCTIONS
+-- ============================================================================
+-- Before running analyses, you MUST login as the appropriate user for each section.
+-- 
+-- Command Line Login Instructions:
+-- 
+-- For ADMINISTRATOR analyses (Section 1):
+--   mysql -u nsubuga -padmin123 hiv_patient_care
+-- 
+-- For CLINICIAN analyses (Section 2):
+--   mysql -u doctor1 -pdoctor123 hiv_patient_care
+-- 
+-- For LAB TECHNICIAN analyses (Section 3):
+--   mysql -u lab_tech1 -plab_tech123 hiv_patient_care
+-- 
+-- For PHARMACY analyses (Section 4):
+--   mysql -u pharmacist1 -ppharmacist1 hiv_patient_care
+-- 
+-- For COUNSELOR analyses (Section 5):
+--   mysql -u counselor1 -pcounselor1 hiv_patient_care
+-- 
+-- For READ-ONLY analyses (Section 6):
+--   mysql -u records_officer1 -precords_officer1 hiv_patient_care
+-- 
+-- IMPORTANT NOTES:
+-- 1. Each section will verify your role before executing queries.
+-- 2. If you don't have the required role, you'll see an UNAUTHORIZED message.
+-- 3. If your role is not automatically active, you may need to activate it:
+--    SET ROLE 'db_clinician';  (replace with your role name)
+-- 4. To check your current role: SELECT CURRENT_ROLE();
+-- 5. To see all your privileges: SHOW GRANTS FOR CURRENT_USER();
+-- ============================================================================
 
 USE hiv_patient_care;
 
 -- ============================================================================
+-- VERIFY CURRENT USER AND ROLE
+-- ============================================================================
+-- Check your current login and active role before running analyses
+-- ============================================================================
+SELECT 
+    'CURRENT_USER' AS check_type,
+    CURRENT_USER() AS user_info,
+    CURRENT_ROLE() AS role_info,
+    CASE 
+        WHEN CURRENT_ROLE() IS NULL THEN 
+            'WARNING: No role active. Use SET ROLE to activate your role, or login with the correct user.'
+        ELSE 
+            CONCAT('Role is active: ', CURRENT_ROLE())
+    END AS status;
+
+-- ============================================================================
 -- SECTION 1: ADMINISTRATOR (db_admin) - FULL SYSTEM ANALYSIS
 -- ============================================================================
+-- REQUIRED LOGIN: mysql -u nsubuga -padmin123 hiv_patient_care
+-- REQUIRED ROLE: db_admin
+-- ============================================================================
+
+-- Verify role before proceeding
+SELECT 
+    CASE 
+        WHEN CURRENT_ROLE() LIKE '%db_admin%' OR CURRENT_USER() = 'nsubuga@localhost' THEN 
+            '✓ AUTHORIZED: Admin role verified. Proceeding with admin analyses...'
+        ELSE 
+            CONCAT('✗ UNAUTHORIZED: Current role is ', COALESCE(CURRENT_ROLE(), 'NULL'), 
+                   '. Please login as nsubuga@localhost with db_admin role.')
+    END AS authorization_check;
 
 -- 1.1 System Overview Dashboard
 SELECT '=== ADMIN: SYSTEM OVERVIEW ===' AS section;
@@ -144,6 +206,19 @@ WHERE session_date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY);
 -- ============================================================================
 -- SECTION 2: CLINICIAN (db_clinician) - CLINICAL ANALYSIS
 -- ============================================================================
+-- REQUIRED LOGIN: mysql -u doctor1 -pdoctor123 hiv_patient_care
+-- REQUIRED ROLE: db_clinician
+-- ============================================================================
+
+-- Verify role before proceeding
+SELECT 
+    CASE 
+        WHEN CURRENT_ROLE() LIKE '%db_clinician%' OR CURRENT_USER() = 'doctor1@localhost' THEN 
+            '✓ AUTHORIZED: Clinician role verified. Proceeding with clinical analyses...'
+        ELSE 
+            CONCAT('✗ UNAUTHORIZED: Current role is ', COALESCE(CURRENT_ROLE(), 'NULL'), 
+                   '. Please login as doctor1@localhost with db_clinician role.')
+    END AS authorization_check;
 
 -- 2.1 Active Patients Requiring Attention
 SELECT '=== CLINICIAN: PATIENTS REQUIRING ATTENTION ===' AS section;
@@ -303,6 +378,19 @@ ORDER BY enrollment_year DESC;
 -- ============================================================================
 -- SECTION 3: LAB TECHNICIAN (db_lab) - LABORATORY ANALYSIS
 -- ============================================================================
+-- REQUIRED LOGIN: mysql -u lab_tech1 -plab_tech123 hiv_patient_care
+-- REQUIRED ROLE: db_lab
+-- ============================================================================
+
+-- Verify role before proceeding
+SELECT 
+    CASE 
+        WHEN CURRENT_ROLE() LIKE '%db_lab%' OR CURRENT_USER() = 'lab_tech1@localhost' THEN 
+            '✓ AUTHORIZED: Lab technician role verified. Proceeding with lab analyses...'
+        ELSE 
+            CONCAT('✗ UNAUTHORIZED: Current role is ', COALESCE(CURRENT_ROLE(), 'NULL'), 
+                   '. Please login as lab_tech1@localhost with db_lab role.')
+    END AS authorization_check;
 
 -- 3.1 Lab Test Volume by Type
 SELECT '=== LAB: TEST VOLUME BY TYPE ===' AS section;
@@ -387,6 +475,19 @@ WHERE test_type = 'Viral Load'
 -- ============================================================================
 -- SECTION 4: PHARMACY (db_pharmacy) - DISPENSING ANALYSIS
 -- ============================================================================
+-- REQUIRED LOGIN: mysql -u pharmacist1 -ppharmacist1 hiv_patient_care
+-- REQUIRED ROLE: db_pharmacy
+-- ============================================================================
+
+-- Verify role before proceeding
+SELECT 
+    CASE 
+        WHEN CURRENT_ROLE() LIKE '%db_pharmacy%' OR CURRENT_USER() = 'pharmacist1@localhost' THEN 
+            '✓ AUTHORIZED: Pharmacy role verified. Proceeding with pharmacy analyses...'
+        ELSE 
+            CONCAT('✗ UNAUTHORIZED: Current role is ', COALESCE(CURRENT_ROLE(), 'NULL'), 
+                   '. Please login as pharmacist1@localhost with db_pharmacy role.')
+    END AS authorization_check;
 
 -- 4.1 Dispensing Volume Trends
 SELECT '=== PHARMACY: DISPENSING VOLUME TRENDS ===' AS section;
@@ -485,6 +586,19 @@ ORDER BY days_since_last_rotation DESC, total_rotations DESC;
 -- ============================================================================
 -- SECTION 5: COUNSELOR (db_counselor) - ADHERENCE & COUNSELING ANALYSIS
 -- ============================================================================
+-- REQUIRED LOGIN: mysql -u counselor1 -pcounselor1 hiv_patient_care
+-- REQUIRED ROLE: db_counselor
+-- ============================================================================
+
+-- Verify role before proceeding
+SELECT 
+    CASE 
+        WHEN CURRENT_ROLE() LIKE '%db_counselor%' OR CURRENT_USER() = 'counselor1@localhost' THEN 
+            '✓ AUTHORIZED: Counselor role verified. Proceeding with counseling analyses...'
+        ELSE 
+            CONCAT('✗ UNAUTHORIZED: Current role is ', COALESCE(CURRENT_ROLE(), 'NULL'), 
+                   '. Please login as counselor1@localhost with db_counselor role.')
+    END AS authorization_check;
 
 -- 5.1 Overall Adherence Statistics
 SELECT '=== COUNSELOR: OVERALL ADHERENCE STATISTICS ===' AS section;
@@ -598,6 +712,19 @@ ORDER BY assessment_month DESC;
 -- ============================================================================
 -- SECTION 6: READ-ONLY (db_readonly) - REPORTING QUERIES
 -- ============================================================================
+-- REQUIRED LOGIN: mysql -u records_officer1 -precords_officer1 hiv_patient_care
+-- REQUIRED ROLE: db_readonly
+-- ============================================================================
+
+-- Verify role before proceeding
+SELECT 
+    CASE 
+        WHEN CURRENT_ROLE() LIKE '%db_readonly%' OR CURRENT_USER() = 'records_officer1@localhost' THEN 
+            '✓ AUTHORIZED: Read-only role verified. Proceeding with reporting queries...'
+        ELSE 
+            CONCAT('✗ UNAUTHORIZED: Current role is ', COALESCE(CURRENT_ROLE(), 'NULL'), 
+                   '. Please login as records_officer1@localhost with db_readonly role.')
+    END AS authorization_check;
 
 -- 6.1 Monthly Activity Summary Report
 SELECT '=== READONLY: MONTHLY ACTIVITY SUMMARY ===' AS section;
@@ -672,6 +799,20 @@ ORDER BY alert_type, alert_level;
 -- ============================================================================
 -- SECTION 7: CROSS-ROLE ANALYSIS - ADVANCED METRICS
 -- ============================================================================
+-- NOTE: This section requires admin privileges (db_admin role)
+-- REQUIRED LOGIN: mysql -u nsubuga -padmin123 hiv_patient_care
+-- REQUIRED ROLE: db_admin
+-- ============================================================================
+
+-- Verify role before proceeding
+SELECT 
+    CASE 
+        WHEN CURRENT_ROLE() LIKE '%db_admin%' OR CURRENT_USER() = 'nsubuga@localhost' THEN 
+            '✓ AUTHORIZED: Admin role verified. Proceeding with cross-role analyses...'
+        ELSE 
+            CONCAT('✗ UNAUTHORIZED: Current role is ', COALESCE(CURRENT_ROLE(), 'NULL'), 
+                   '. Please login as nsubuga@localhost with db_admin role.')
+    END AS authorization_check;
 
 -- 7.1 Patient Retention Analysis
 SELECT '=== CROSS-ROLE: PATIENT RETENTION ANALYSIS ===' AS section;
