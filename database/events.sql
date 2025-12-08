@@ -3,6 +3,7 @@
 -- HIV Patient Care & Treatment Monitoring System
 -- Automated daily/weekly tasks that run automatically
 -- ============================================================================
+USE hiv_patient_care;
 
 SET GLOBAL event_scheduler = ON;
 

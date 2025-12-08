@@ -184,21 +184,12 @@ BEGIN
         table_name,
         record_id,
         action,
-        new_values,
-        changed_at
+        details
     ) VALUES (
         'lab_test',
-        NEW.lab_test_id,
+        CAST(NEW.lab_test_id AS CHAR),
         'INSERT',
-        JSON_OBJECT(
-            'lab_test_id', NEW.lab_test_id,
-            'patient_id', NEW.patient_id,
-            'test_type', NEW.test_type,
-            'test_date', NEW.test_date,
-            'result_numeric', NEW.result_numeric,
-            'result_status', NEW.result_status
-        ),
-        CURRENT_TIMESTAMP
+        CONCAT('Lab test created: Patient ', NEW.patient_id, ', Type: ', NEW.test_type, ', Date: ', NEW.test_date, ', Status: ', NEW.result_status, ', Result: ', COALESCE(CAST(NEW.result_numeric AS CHAR), 'N/A'))
     );
 END//
 
