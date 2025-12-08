@@ -7,6 +7,8 @@
 -- VIEW: Active Patients Summary
 -- Summary of active patients: last visit, last VL, last adherence, etc.
 -- ============================================================================
+USE hiv_patient_care; 
+
 
 CREATE OR REPLACE VIEW `v_active_patients_summary` AS
 SELECT 

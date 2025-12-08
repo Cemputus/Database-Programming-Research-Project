@@ -3,6 +3,8 @@
 -- HIV Patient Care & Treatment Monitoring System
 -- ============================================================================
 
+USE hiv_patient_care;
+
 DELIMITER //
 
 -- ============================================================================
@@ -357,10 +359,13 @@ END//
 DROP PROCEDURE IF EXISTS `sp_patient_visits`//
 CREATE PROCEDURE `sp_patient_visits`(
     IN p_patient_code VARCHAR(50),
-    IN p_limit INT UNSIGNED DEFAULT 20
+    IN p_limit INT UNSIGNED
 )
 BEGIN
     DECLARE v_patient_id INT UNSIGNED;
+    DECLARE v_limit INT UNSIGNED DEFAULT 20;
+    
+    SET v_limit = COALESCE(p_limit, 20);
     
     SELECT patient_id INTO v_patient_id
     FROM patient
@@ -373,7 +378,7 @@ BEGIN
     
     SELECT * FROM v_patient_visit_history
     WHERE patient_id = v_patient_id
-    LIMIT p_limit;
+    LIMIT v_limit;
 END//
 
 -- ============================================================================
@@ -384,11 +389,14 @@ END//
 DROP PROCEDURE IF EXISTS `sp_patient_lab_tests`//
 CREATE PROCEDURE `sp_patient_lab_tests`(
     IN p_patient_code VARCHAR(50),
-    IN p_test_type VARCHAR(50) DEFAULT NULL,
-    IN p_limit INT UNSIGNED DEFAULT 50
+    IN p_test_type VARCHAR(50),
+    IN p_limit INT UNSIGNED
 )
 BEGIN
     DECLARE v_patient_id INT UNSIGNED;
+    DECLARE v_limit INT UNSIGNED DEFAULT 50;
+    
+    SET v_limit = COALESCE(p_limit, 50);
     
     SELECT patient_id INTO v_patient_id
     FROM patient
@@ -402,7 +410,7 @@ BEGIN
     SELECT * FROM v_patient_lab_history
     WHERE patient_id = v_patient_id
       AND (p_test_type IS NULL OR test_type = p_test_type)
-    LIMIT p_limit;
+    LIMIT v_limit;
 END//
 
 -- ============================================================================
@@ -413,10 +421,13 @@ END//
 DROP PROCEDURE IF EXISTS `sp_patient_medications`//
 CREATE PROCEDURE `sp_patient_medications`(
     IN p_patient_code VARCHAR(50),
-    IN p_limit INT UNSIGNED DEFAULT 20
+    IN p_limit INT UNSIGNED
 )
 BEGIN
     DECLARE v_patient_id INT UNSIGNED;
+    DECLARE v_limit INT UNSIGNED DEFAULT 20;
+    
+    SET v_limit = COALESCE(p_limit, 20);
     
     SELECT patient_id INTO v_patient_id
     FROM patient
@@ -429,7 +440,7 @@ BEGIN
     
     SELECT * FROM v_patient_medication_history
     WHERE patient_id = v_patient_id
-    LIMIT p_limit;
+    LIMIT v_limit;
 END//
 
 -- ============================================================================
@@ -440,11 +451,14 @@ END//
 DROP PROCEDURE IF EXISTS `sp_patient_appointments`//
 CREATE PROCEDURE `sp_patient_appointments`(
     IN p_patient_code VARCHAR(50),
-    IN p_status VARCHAR(50) DEFAULT NULL,
-    IN p_limit INT UNSIGNED DEFAULT 20
+    IN p_status VARCHAR(50),
+    IN p_limit INT UNSIGNED
 )
 BEGIN
     DECLARE v_patient_id INT UNSIGNED;
+    DECLARE v_limit INT UNSIGNED DEFAULT 20;
+    
+    SET v_limit = COALESCE(p_limit, 20);
     
     SELECT patient_id INTO v_patient_id
     FROM patient
@@ -459,7 +473,7 @@ BEGIN
     WHERE patient_id = v_patient_id
       AND (p_status IS NULL OR status = p_status)
     ORDER BY scheduled_date DESC
-    LIMIT p_limit;
+    LIMIT v_limit;
 END//
 
 -- ============================================================================
@@ -470,10 +484,13 @@ END//
 DROP PROCEDURE IF EXISTS `sp_patient_adherence`//
 CREATE PROCEDURE `sp_patient_adherence`(
     IN p_patient_code VARCHAR(50),
-    IN p_limit INT UNSIGNED DEFAULT 12
+    IN p_limit INT UNSIGNED
 )
 BEGIN
     DECLARE v_patient_id INT UNSIGNED;
+    DECLARE v_limit INT UNSIGNED DEFAULT 12;
+    
+    SET v_limit = COALESCE(p_limit, 12);
     
     SELECT patient_id INTO v_patient_id
     FROM patient
@@ -486,7 +503,7 @@ BEGIN
     
     SELECT * FROM v_patient_adherence_history
     WHERE patient_id = v_patient_id
-    LIMIT p_limit;
+    LIMIT v_limit;
 END//
 
 -- ============================================================================
@@ -497,11 +514,16 @@ END//
 DROP PROCEDURE IF EXISTS `sp_patient_alerts`//
 CREATE PROCEDURE `sp_patient_alerts`(
     IN p_patient_code VARCHAR(50),
-    IN p_resolved_only BOOLEAN DEFAULT FALSE,
-    IN p_limit INT UNSIGNED DEFAULT 20
+    IN p_resolved_only BOOLEAN,
+    IN p_limit INT UNSIGNED
 )
 BEGIN
     DECLARE v_patient_id INT UNSIGNED;
+    DECLARE v_limit INT UNSIGNED DEFAULT 20;
+    DECLARE v_resolved_only BOOLEAN DEFAULT FALSE;
+    
+    SET v_limit = COALESCE(p_limit, 20);
+    SET v_resolved_only = COALESCE(p_resolved_only, FALSE);
     
     SELECT patient_id INTO v_patient_id
     FROM patient
@@ -514,8 +536,8 @@ BEGIN
     
     SELECT * FROM v_patient_alerts
     WHERE patient_id = v_patient_id
-      AND (p_resolved_only = FALSE OR is_resolved = TRUE)
-    LIMIT p_limit;
+      AND (v_resolved_only = FALSE OR is_resolved = TRUE)
+    LIMIT v_limit;
 END//
 
 -- ============================================================================
@@ -527,12 +549,15 @@ END//
 DROP PROCEDURE IF EXISTS `sp_patient_progress_timeline`//
 CREATE PROCEDURE `sp_patient_progress_timeline`(
     IN p_patient_code VARCHAR(50),
-    IN p_start_date DATE DEFAULT NULL,
-    IN p_end_date DATE DEFAULT NULL,
-    IN p_limit INT UNSIGNED DEFAULT 50
+    IN p_start_date DATE,
+    IN p_end_date DATE,
+    IN p_limit INT UNSIGNED
 )
 BEGIN
     DECLARE v_patient_id INT UNSIGNED;
+    DECLARE v_limit INT UNSIGNED DEFAULT 50;
+    
+    SET v_limit = COALESCE(p_limit, 50);
     
     SELECT patient_id INTO v_patient_id
     FROM patient
@@ -547,7 +572,7 @@ BEGIN
     WHERE patient_id = v_patient_id
       AND (p_start_date IS NULL OR event_date >= p_start_date)
       AND (p_end_date IS NULL OR event_date <= p_end_date)
-    LIMIT p_limit;
+    LIMIT v_limit;
 END//
 
 -- ============================================================================
@@ -645,6 +670,7 @@ BEGIN
     DECLARE v_current_members INT;
     DECLARE v_max_members INT;
     DECLARE v_patient_status VARCHAR(20);
+    DECLARE v_error_msg VARCHAR(255);
     
     SELECT status, max_members INTO v_cag_status, v_max_members
     FROM cag
@@ -684,7 +710,8 @@ BEGIN
     WHERE cag_id = p_cag_id AND is_active = TRUE;
     
     IF v_current_members >= v_max_members THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = CONCAT('CAG has reached maximum members (', v_max_members, ')');
+        SET v_error_msg = CONCAT('CAG has reached maximum members (', v_max_members, ')');
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = v_error_msg;
     END IF;
     
     UPDATE patient_cag
