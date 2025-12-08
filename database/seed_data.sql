@@ -18888,10 +18888,13 @@ SELECT
     END AS is_active,
     CASE 
         WHEN p.current_status IN ('Dead', 'Transferred-Out', 'LTFU') THEN 
-            COALESCE(
-                (SELECT MAX(visit_date) FROM visit WHERE patient_id = p.patient_id),
-                (SELECT MAX(dispense_date) FROM dispense WHERE patient_id = p.patient_id),
-                p.enrollment_date
+            GREATEST(
+                p.enrollment_date,
+                COALESCE(
+                    (SELECT MAX(visit_date) FROM visit WHERE patient_id = p.patient_id),
+                    (SELECT MAX(dispense_date) FROM dispense WHERE patient_id = p.patient_id),
+                    p.enrollment_date
+                )
             )
         ELSE NULL
     END AS exit_date,

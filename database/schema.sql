@@ -4,6 +4,8 @@
 -- Database Schema (MySQL 8.0+)
 -- ============================================================================
 
+
+DROP DATABASE IF EXISTS `hiv_patient_care`;
 -- Create database if it doesn't exist
 CREATE DATABASE IF NOT EXISTS `hiv_patient_care` 
   DEFAULT CHARACTER SET utf8mb4 
@@ -435,8 +437,7 @@ COMMIT;
 -- END OF SCHEMA
 -- ============================================================================
 
----------------------------------------------
+-- ---------------------------------------------
 -- To view the structure of the created tables, use:
- DESCRIBE cag ;
-
- DESCRIBE patient_cag ;
+-- DESCRIBE cag ;
+-- DESCRIBE patient_cag ;
