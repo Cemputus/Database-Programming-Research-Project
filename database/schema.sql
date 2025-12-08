@@ -415,6 +415,7 @@ CREATE TABLE IF NOT EXISTS `audit_log` (
 -- ============================================================================
 -- ADDITIONAL INDEXES FOR PERFORMANCE
 -- ============================================================================
+use hiv_patient_care;
 
 CREATE INDEX `idx_patient_status_enrollment` ON `patient` (`current_status`, `enrollment_date`);
 CREATE INDEX `idx_visit_patient_date` ON `visit` (`patient_id`, `visit_date` DESC);
@@ -427,3 +428,15 @@ CREATE INDEX `idx_rotation_cag_date` ON `cag_rotation` (`cag_id`, `rotation_date
 
 SET FOREIGN_KEY_CHECKS = 1;
 COMMIT;
+
+
+
+-- ============================================================================
+-- END OF SCHEMA
+-- ============================================================================
+
+---------------------------------------------
+-- To view the structure of the created tables, use:
+ DESCRIBE cag ;
+
+ DESCRIBE patient_cag ;
