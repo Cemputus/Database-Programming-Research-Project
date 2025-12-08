@@ -78,6 +78,8 @@ END//
 -- Creates 'Missed Appointment' alert when status changes to 'Missed'
 -- ============================================================================
 
+USE hiv_patient_care;
+
 DROP TRIGGER IF EXISTS `trg_appointment_missed_alert`//
 CREATE TRIGGER `trg_appointment_missed_alert`
 AFTER UPDATE ON `appointment`
@@ -194,7 +196,7 @@ BEGIN
             'test_type', NEW.test_type,
             'test_date', NEW.test_date,
             'result_numeric', NEW.result_numeric,
-            'status', NEW.status
+            'result_status', NEW.result_status
         ),
         CURRENT_TIMESTAMP
     );
@@ -278,4 +280,10 @@ BEGIN
 END//
 
 DELIMITER ;
+
+-- ============================================================================
+-- END OF TRIGGERS
+-- ============================================================================
+
+
 
