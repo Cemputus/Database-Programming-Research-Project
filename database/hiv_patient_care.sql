@@ -23358,3 +23358,13 @@ ORDER BY total_patients DESC;
 SELECT '=== ANALYSIS COMPLETE ===' AS status,
        'All role-based analyses have been executed. Review results above.' AS note;
 
+
+
+-- ============================================================================
+-- END OF HIV PATIENT CARE & TREATMENT MONITORING SYSTEM
+-- ============================================================================
+-- AUTHOR: Emmanuel NSubuga
+-- EMAIL: ensubuga019@gmail.com
+-- DATE: 2025-12-08
+-- VERSION: 1.0.0
+-- ============================================================================
