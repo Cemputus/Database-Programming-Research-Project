@@ -1,0 +1,909 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{subcaption}
+
+% Page setup
+\geometry{margin=2.5cm}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{CSC2209 - Database Programming}
+\fancyhead[R]{Uganda Christian University}
+\fancyfoot[C]{\thepage}
+
+% Title formatting
+\titleformat{\section}{\Large\bfseries}{\thesection}{1em}{}
+\titleformat{\subsection}{\large\bfseries}{\thesubsection}{1em}{}
+\titleformat{\subsubsection}{\normalsize\bfseries}{\thesubsubsection}{1em}{}
+
+% Code listing setup
+\lstset{
+    language=SQL,
+    basicstyle=\ttfamily\small,
+    keywordstyle=\color{blue}\bfseries,
+    commentstyle=\color{green!60!black},
+    stringstyle=\color{red},
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    stepnumber=1,
+    numbersep=5pt,
+    backgroundcolor=\color{gray!10},
+    frame=single,
+    breaklines=true,
+    breakatwhitespace=true,
+    tabsize=2,
+    showspaces=false,
+    showstringspaces=false
+}
+
+% Document metadata
+\title{
+    \vspace{-2cm}
+    \textbf{DESIGN AND IMPLEMENTATION OF A DATABASE APPLICATION}\\
+    \large HIV Patient Care \& Treatment Monitoring System\\
+    \large Mukono General Hospital ART Clinic
+    \vspace{0.5cm}
+}
+\author{
+    \textbf{Student Name:} [Your Name]\\
+    \textbf{Registration Number:} [Your Registration Number]\\
+    \textbf{Program:} Bachelor of Science in Data Science and Analytics\\
+    \textbf{Course:} CSC2209 - Database Programming\\
+    \textbf{Institution:} Uganda Christian University\\
+    \textbf{Academic Year:} 2024/2025\\
+    \textbf{Semester:} Advent 2025\\
+    \vspace{0.3cm}
+    \textbf{Project Repository:} \url{https://github.com/Cemputus/Database-Programming-Research-Project}
+}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\thispagestyle{empty}
+
+\newpage
+
+\tableofcontents
+\newpage
+
+\listoffigures
+\newpage
+
+% ============================================================================
+% EXECUTIVE SUMMARY
+% ============================================================================
+\section{Executive Summary}
+
+This project presents the design and implementation of a comprehensive database application for managing HIV patient care and treatment monitoring at Mukono General Hospital ART Clinic, Uganda. The system addresses critical challenges in paper-based record keeping that impede effective patient care management for approximately 1.49 million people living with HIV in Uganda.
+
+\textbf{Project Repository:} The complete source code and documentation are available at \url{https://github.com/Cemputus/Database-Programming-Research-Project}
+
+The solution aligns with \textbf{SDG 3: Good Health and Well-being} by improving healthcare delivery, treatment adherence, and patient outcomes through digital transformation. The system implements an Enhanced Entity Relationship (EER) model with advanced database features including stored procedures, triggers, views, role-based access control, and automated alerts.
+
+\textbf{Key Achievements:}
+\begin{itemize}
+    \item 17 core tables with comprehensive relationships
+    \item 15+ views for reporting and patient self-service
+    \item 21 stored procedures for business logic
+    \item 8 triggers for automated alerts and audit logging
+    \item 5 scheduled events for routine maintenance
+    \item 7 role-based access control levels
+    \item Complete RESTful API with JWT authentication
+\end{itemize}
+
+% ============================================================================
+% MILESTONE ONE: REQUIREMENTS SPECIFICATION
+% ============================================================================
+\section{Milestone One: Requirements Specification}
+
+\subsection{Problem Statement}
+
+Uganda faces a significant HIV/AIDS challenge with approximately \textbf{1.49 million people living with HIV} (5.1\% adult prevalence rate). Many health facilities, especially at lower levels, rely on paper-based record keeping, leading to:
+
+\begin{itemize}
+    \item Fragmented patient histories and lost records
+    \item Lack of automated alerts for missed appointments and overdue tests
+    \item Data silos preventing integrated patient care
+    \item Inefficient reporting and poor decision-making
+    \item Treatment failures and poor viral suppression rates
+\end{itemize}
+
+\subsection{SDG Alignment}
+
+This project aligns with \textbf{SDG 3: Good Health and Well-being}, specifically:
+\begin{itemize}
+    \item Target 3.3: End epidemics of AIDS, tuberculosis, and malaria
+    \item Target 3.8: Achieve universal health coverage
+    \item Supporting Uganda's national HIV response goals
+\end{itemize}
+
+\subsection{Requirements Elicitation Methods}
+
+The following methods were used to gather requirements:
+
+\begin{enumerate}
+    \item \textbf{Literature Review}: Analysis of Uganda MOH guidelines, HMIS forms, and HIV treatment protocols
+    \item \textbf{Stakeholder Analysis}: Identification of key users (clinicians, lab staff, pharmacists, counselors, administrators)
+    \item \textbf{Document Analysis}: Review of existing paper forms (HMIS 031, pharmacy logs, lab registers)
+    \item \textbf{Use Case Modeling}: Identification of primary workflows and user interactions
+\end{enumerate}
+
+\subsection{Functional Requirements}
+
+\subsubsection{FR1: Patient Management}
+\begin{itemize}
+    \item FR1.1: Register new patients with Uganda NIN and demographic information
+    \item FR1.2: Track patient enrollment dates and ART initiation
+    \item FR1.3: Manage patient status (Active, Transferred-Out, LTFU, Dead)
+    \item FR1.4: Maintain patient location hierarchy (District → Subcounty → Parish → Village)
+\end{itemize}
+
+\subsubsection{FR2: Clinical Operations}
+\begin{itemize}
+    \item FR2.1: Record clinical visits with vital signs, symptoms, and diagnoses
+    \item FR2.2: Track WHO clinical staging (1-4)
+    \item FR2.3: Manage TB screening results
+    \item FR2.4: Schedule and track patient appointments
+\end{itemize}
+
+\subsubsection{FR3: Laboratory Management}
+\begin{itemize}
+    \item FR3.1: Record laboratory test results (Viral Load, CD4, HB, Creatinine, Malaria RDT, TB-LAM, Urinalysis)
+    \item FR3.2: Track CPHL sample IDs for viral load tests
+    \item FR3.3: Manage test status (Pending, Completed, Rejected)
+    \item FR3.4: Link lab tests to clinical visits
+\end{itemize}
+
+\subsubsection{FR4: Pharmacy Management}
+\begin{itemize}
+    \item FR4.1: Maintain ART regimen catalog (First Line, Second Line, Third Line)
+    \item FR4.2: Record medication dispensing with days supply
+    \item FR4.3: Calculate next refill dates automatically
+    \item FR4.4: Track medication refills and identify overdue refills
+\end{itemize}
+
+\subsubsection{FR5: Counseling and Adherence}
+\begin{itemize}
+    \item FR5.1: Record counseling sessions with topics and barriers
+    \item FR5.2: Track adherence assessments using multiple methods (Pill Count, Pharmacy Refill, Self Report, CAG Report, Computed)
+    \item FR5.3: Calculate adherence percentages (0-100\%)
+    \item FR5.4: Identify patients requiring adherence support
+\end{itemize}
+
+\subsubsection{FR6: Community ART Groups (CAGs)}
+\begin{itemize}
+    \item FR6.1: Create and manage CAGs with location information
+    \item FR6.2: Assign patients to CAGs with roles (Member, Coordinator, Deputy Coordinator)
+    \item FR6.3: Track CAG medication pickup rotations
+    \item FR6.4: Monitor CAG performance metrics
+\end{itemize}
+
+\subsubsection{FR7: Automated Alerts}
+\begin{itemize}
+    \item FR7.1: Generate alerts for high viral loads (>1000 copies/mL)
+    \item FR7.2: Alert for overdue viral load tests (>180 days)
+    \item FR7.3: Alert for missed appointments
+    \item FR7.4: Alert for missed medication refills
+    \item FR7.5: Alert for low adherence (<85\%)
+\end{itemize}
+
+\subsubsection{FR8: Security and Access Control}
+\begin{itemize}
+    \item FR8.1: Implement role-based access control (7 roles)
+    \item FR8.2: Authenticate users with secure credentials
+    \item FR8.3: Audit all data modifications
+    \item FR8.4: Restrict access based on user roles
+\end{itemize}
+
+\subsubsection{FR9: Reporting and Analytics}
+\begin{itemize}
+    \item FR9.1: Generate patient dashboards
+    \item FR9.2: Create role-based analysis reports
+    \item FR9.3: Export data for HMIS reporting
+    \item FR9.4: Provide patient self-service views
+\end{itemize}
+
+\subsection{Assumptions}
+
+\begin{enumerate}
+    \item All patients have or can obtain Uganda National Identification Numbers (NIN)
+    \item Staff members have appropriate professional qualifications and registrations
+    \item The facility has reliable internet connectivity for API access
+    \item Users are trained on system usage and data entry procedures
+    \item Laboratory results are entered within 48 hours of test completion
+    \item Medication dispensing follows Uganda MOH standard regimens
+    \item CAGs operate according to Uganda MOH CAG guidelines
+    \item Viral load tests are conducted every 6 months for stable patients
+    \item The system will be used in a controlled environment with backup power
+    \item Data migration from paper records will be done gradually
+\end{enumerate}
+
+% ============================================================================
+% MILESTONE TWO: DESIGN
+% ============================================================================
+\section{Milestone Two: Design}
+
+\subsection{Enhanced Entity Relationship (EER) Model}
+
+The database design follows an Enhanced Entity Relationship model with the following features:
+
+\subsubsection{Generalization (Supertype/Subtype)}
+
+\textbf{Supertype:} \texttt{person}
+\begin{itemize}
+    \item Contains common attributes: NIN, name, date of birth, gender, location, contact
+    \item Inherited by: \texttt{patient} and \texttt{staff} (subtypes)
+    \item Eliminates data duplication and ensures consistency
+\end{itemize}
+
+\textbf{Subtypes:}
+\begin{itemize}
+    \item \texttt{patient}: Adds patient-specific attributes (patient\_code, enrollment\_date, art\_start\_date, current\_status)
+    \item \texttt{staff}: Adds staff-specific attributes (staff\_code, cadre, moH\_registration\_no, hire\_date)
+\end{itemize}
+
+\subsubsection{Overlapping Specialization}
+
+\textbf{staff\_role} junction table enables:
+\begin{itemize}
+    \item One staff member to have multiple roles simultaneously
+    \item Example: A nurse can also be a midwife
+    \item Roles represent system privileges, not job cadres
+\end{itemize}
+
+\subsubsection{Disjoint Categorization}
+
+\textbf{patient.current\_status}:
+\begin{itemize}
+    \item Must be exactly one of: Active, Transferred-Out, LTFU, Dead
+    \item Mutually exclusive values (disjoint)
+    \item Enforced through ENUM constraint
+\end{itemize}
+
+\subsubsection{Categorization}
+
+Multiple categorization examples:
+\begin{itemize}
+    \item \texttt{lab\_test.test\_type}: Viral Load, CD4, HB, Creatinine, Malaria RDT, TB-LAM, Urinalysis
+    \item \texttt{alert.alert\_type}: High Viral Load, Overdue VL, Missed Appointment, Missed Refill, Low Adherence, Severe OI
+    \item \texttt{adherence\_log.method\_used}: Pill Count, Pharmacy Refill, Self Report, CAG Report, Computed
+\end{itemize}
+
+\subsection{Referential Integrity}
+
+All foreign key relationships enforce referential integrity:
+
+\begin{itemize}
+    \item \texttt{patient.person\_id} → \texttt{person.person\_id} (ON DELETE RESTRICT, ON UPDATE CASCADE)
+    \item \texttt{visit.patient\_id} → \texttt{patient.patient\_id} (ON DELETE RESTRICT, ON UPDATE CASCADE)
+    \item \texttt{lab\_test.patient\_id} → \texttt{patient.patient\_id} (ON DELETE RESTRICT, ON UPDATE CASCADE)
+    \item \texttt{dispense.regimen\_id} → \texttt{regimen.regimen\_id} (ON DELETE RESTRICT, ON UPDATE CASCADE)
+    \item \texttt{patient\_cag.patient\_id} → \texttt{patient.patient\_id} (ON DELETE RESTRICT, ON UPDATE CASCADE)
+    \item \texttt{patient\_cag.cag\_id} → \texttt{cag.cag\_id} (ON DELETE RESTRICT, ON UPDATE CASCADE)
+\end{itemize}
+
+\subsection{Business Rules}
+
+Key business rules enforced through constraints and triggers:
+
+\begin{enumerate}
+    \item \textbf{ART Start Date Rule}: ART start date must be on or after enrollment date
+    \item \textbf{WHO Stage Range}: WHO clinical stage must be between 1 and 4
+    \item \textbf{Days Supply Range}: Medication days supply must be between 1 and 365
+    \item \textbf{Adherence Range}: Adherence percentage must be between 0 and 100\%
+    \item \textbf{Exit Date Rule}: Patient CAG exit date must be on or after join date
+    \item \textbf{Viral Load Non-Negative}: Viral load results cannot be negative
+    \item \textbf{Unique Constraints}: NIN, patient codes, staff codes, CAG names must be unique
+\end{enumerate}
+
+\subsection{Entity Relationship Diagram}
+
+The EER diagram (see Figure \ref{fig:eer}) illustrates:
+\begin{itemize}
+    \item 17 core entities with relationships
+    \item Generalization hierarchy (person → patient/staff)
+    \item Many-to-many relationships (patient ↔ CAG, staff ↔ role)
+    \item One-to-many relationships (patient → visits, lab tests, dispenses)
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\textwidth]{hiv_patient_care.png}
+    \caption{Enhanced Entity Relationship Diagram - HIV Patient Care \& Treatment Monitoring System}
+    \label{fig:eer}
+\end{figure}
+
+% ============================================================================
+% MILESTONE THREE: DATABASE DEVELOPMENT
+% ============================================================================
+\section{Milestone Three: Database Development}
+
+\subsection{Database Structure}
+
+The database consists of 17 core tables organized as follows:
+
+\subsubsection{Core Tables}
+
+\begin{description}
+    \item[\texttt{person}] Supertype table with 11 attributes including NIN, names, demographics, location
+    \item[\texttt{patient}] Subtype with 9 attributes including patient\_code, enrollment\_date, art\_start\_date, current\_status
+    \item[\texttt{staff}] Subtype with 6 attributes including staff\_code, cadre, moH\_registration\_no
+    \item[\texttt{role}] System access roles (7 roles: db\_admin, db\_clinician, db\_lab, db\_pharmacy, db\_counselor, db\_readonly, db\_patient)
+    \item[\texttt{staff\_role}] Junction table for many-to-many relationship
+    \item[\texttt{visit}] Clinical visit records with 9 attributes
+    \item[\texttt{lab\_test}] Laboratory test results with 10 attributes
+    \item[\texttt{regimen}] ART regimen catalog with 4 attributes
+    \item[\texttt{dispense}] Medication dispensing records with 8 attributes
+    \item[\texttt{appointment}] Appointment scheduling with 5 attributes
+    \item[\texttt{counseling\_session}] Counseling session records with 5 attributes
+    \item[\texttt{cag}] Community ART Groups with 11 attributes
+    \item[\texttt{patient\_cag}] Junction table for patient-CAG membership
+    \item[\texttt{cag\_rotation}] CAG medication pickup rotations with 7 attributes
+    \item[\texttt{adherence\_log}] Adherence assessment records with 5 attributes
+    \item[\texttt{alert}] Automated alerts with 8 attributes
+    \item[\texttt{audit\_log}] Audit trail with 6 attributes
+\end{description}
+
+\subsection{Data Validation Constraints}
+
+\subsubsection{Primary Key Constraints}
+
+All tables have primary keys ensuring unique identification:
+\begin{lstlisting}
+PRIMARY KEY (`patient_id`)
+PRIMARY KEY (`visit_id`)
+PRIMARY KEY (`lab_test_id`)
+\end{lstlisting}
+
+\subsubsection{Foreign Key Constraints}
+
+All relationships enforce referential integrity:
+\begin{lstlisting}
+CONSTRAINT `fk_patient_person` 
+    FOREIGN KEY (`person_id`) 
+    REFERENCES `person` (`person_id`) 
+    ON DELETE RESTRICT ON UPDATE CASCADE
+\end{lstlisting}
+
+\subsubsection{Unique Constraints}
+
+Critical attributes have unique constraints:
+\begin{lstlisting}
+UNIQUE KEY `uk_nin` (`nin`)
+UNIQUE KEY `uk_patient_code` (`patient_code`)
+UNIQUE KEY `uk_staff_code` (`staff_code`)
+UNIQUE KEY `uk_cag_name` (`cag_name`)
+\end{lstlisting}
+
+\subsubsection{Check Constraints}
+
+Business rules enforced through CHECK constraints:
+\begin{lstlisting}
+CONSTRAINT `chk_art_after_enrollment` 
+    CHECK (`art_start_date` IS NULL OR 
+           `art_start_date` >= `enrollment_date`)
+
+CONSTRAINT `chk_who_stage_range` 
+    CHECK (`who_stage` IS NULL OR 
+           (`who_stage` >= 1 AND `who_stage` <= 4))
+
+CONSTRAINT `chk_days_supply_range` 
+    CHECK (`days_supply` > 0 AND `days_supply` <= 365)
+
+CONSTRAINT `chk_adherence_range` 
+    CHECK (`adherence_percent` >= 0 AND 
+           `adherence_percent` <= 100)
+
+CONSTRAINT `chk_exit_date_after_join` 
+    CHECK (`exit_date` IS NULL OR 
+           `exit_date` >= `join_date`)
+\end{lstlisting}
+
+\subsubsection{ENUM Constraints}
+
+Categorical data restricted to valid values:
+\begin{lstlisting}
+`sex` ENUM('M', 'F')
+`current_status` ENUM('Active', 'Transferred-Out', 'LTFU', 'Dead')
+`test_type` ENUM('Viral Load', 'CD4', 'HB', 'Creatinine', 
+                 'Malaria RDT', 'TB-LAM', 'Urinalysis')
+`result_status` ENUM('Pending', 'Completed', 'Rejected')
+`alert_type` ENUM('High Viral Load', 'Overdue VL', 
+                   'Missed Appointment', 'Missed Refill', 
+                   'Low Adherence', 'Severe OI')
+\end{lstlisting}
+
+\subsection{Indexes for Performance}
+
+Strategic indexes created for query optimization:
+
+\begin{lstlisting}
+CREATE INDEX `idx_patient_status_enrollment` 
+    ON `patient` (`current_status`, `enrollment_date`);
+
+CREATE INDEX `idx_visit_patient_date` 
+    ON `visit` (`patient_id`, `visit_date` DESC);
+
+CREATE INDEX `idx_lab_test_patient_type_date` 
+    ON `lab_test` (`patient_id`, `test_type`, `test_date` DESC);
+
+CREATE INDEX `idx_dispense_patient_date` 
+    ON `dispense` (`patient_id`, `dispense_date` DESC);
+\end{lstlisting}
+
+\subsection{Data Validation Functions}
+
+Built-in MySQL functions used for validation:
+\begin{itemize}
+    \item \texttt{CURDATE()} - Current date validation
+    \item \texttt{DATEDIFF()} - Date difference calculations
+    \item \texttt{TIMESTAMPDIFF()} - Age calculations
+    \item \texttt{COALESCE()} - Null value handling
+    \item \texttt{GREATEST()} - Maximum value selection
+\end{itemize}
+
+% ============================================================================
+% MILESTONE FOUR: SECURITY AND AUTOMATION
+% ============================================================================
+\section{Milestone Four: Security and Automation}
+
+\subsection{Views}
+
+\subsubsection{Clinical Views}
+
+\begin{itemize}
+    \item \texttt{v\_active\_patients\_summary} - Active patients with key metrics
+    \item \texttt{v\_patient\_care\_timeline} - Chronological patient events
+    \item \texttt{v\_viral\_load\_monitoring} - VL status and test scheduling
+    \item \texttt{v\_adherence\_summary} - Latest adherence assessments
+    \item \texttt{v\_active\_alerts\_summary} - All unresolved alerts
+\end{itemize}
+
+\subsubsection{Patient Self-Service Views}
+
+\begin{itemize}
+    \item \texttt{v\_patient\_dashboard} - Complete patient overview
+    \item \texttt{v\_patient\_visit\_history} - Clinical visit history
+    \item \texttt{v\_patient\_lab\_history} - Lab test results
+    \item \texttt{v\_patient\_medication\_history} - Medication records
+    \item \texttt{v\_patient\_appointments} - Appointment schedule
+    \item \texttt{v\_patient\_adherence\_history} - Adherence assessments
+    \item \texttt{v\_patient\_alerts} - Patient alerts
+    \item \texttt{v\_patient\_progress\_timeline} - Complete care timeline
+\end{itemize}
+
+\subsubsection{CAG Views}
+
+\begin{itemize}
+    \item \texttt{v\_cag\_summary} - CAG overview with member counts
+    \item \texttt{v\_cag\_members} - Active CAG members
+    \item \texttt{v\_cag\_rotation\_history} - Rotation records
+    \item \texttt{v\_cag\_performance} - CAG performance metrics
+\end{itemize}
+
+\subsection{User Authentication, Privileges and Roles}
+
+The system implements comprehensive role-based access control with seven distinct roles. Figure \ref{fig:admin} demonstrates the role-based analysis interface showing staff distribution by cadre.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{admin.png}
+    \caption{Role-Based Access Control - Administrator View: Staff Analysis by Cadre}
+    \label{fig:admin}
+\end{figure}
+
+\subsubsection{Database Roles}
+
+Seven distinct roles created:
+
+\begin{enumerate}
+    \item \textbf{db\_admin} - Full system access (ALL PRIVILEGES)
+    \item \textbf{db\_clinician} - Read all, write to visits, appointments, patients, lab\_tests, adherence\_log, alerts
+    \item \textbf{db\_lab} - Read patient/staff data, write lab\_test results
+    \item \textbf{db\_pharmacy} - Read patient/regimen data, write dispense records
+    \item \textbf{db\_counselor} - Read patient data, write counseling\_session, adherence\_log, appointments
+    \item \textbf{db\_readonly} - Read-only access to all tables and views
+    \item \textbf{db\_patient} - Read-only access to own data via views and procedures
+\end{enumerate}
+
+\subsubsection{Role Implementation}
+
+\begin{lstlisting}
+-- Create roles
+CREATE ROLE 'db_admin';
+CREATE ROLE 'db_clinician';
+CREATE ROLE 'db_lab';
+CREATE ROLE 'db_pharmacy';
+CREATE ROLE 'db_counselor';
+CREATE ROLE 'db_readonly';
+CREATE ROLE 'db_patient';
+
+-- Grant privileges
+GRANT ALL PRIVILEGES ON hiv_patient_care.* TO 'db_admin';
+GRANT SELECT ON hiv_patient_care.* TO 'db_clinician';
+GRANT INSERT, UPDATE ON hiv_patient_care.`visit` TO 'db_clinician';
+
+-- Create users and assign roles
+CREATE USER 'doctor1'@'localhost' IDENTIFIED BY 'doctor123';
+GRANT 'db_clinician' TO 'doctor1'@'localhost';
+SET DEFAULT ROLE 'db_clinician' TO 'doctor1'@'localhost';
+\end{lstlisting}
+
+\subsection{Stored Procedures}
+
+\subsubsection{Patient Self-Service Procedures}
+
+\begin{itemize}
+    \item \texttt{sp\_patient\_dashboard} - Get complete patient dashboard
+    \item \texttt{sp\_patient\_visits} - Get visit history
+    \item \texttt{sp\_patient\_lab\_tests} - Get lab test history
+    \item \texttt{sp\_patient\_medications} - Get medication history
+    \item \texttt{sp\_patient\_appointments} - Get appointments
+    \item \texttt{sp\_patient\_adherence} - Get adherence history
+    \item \texttt{sp\_patient\_alerts} - Get patient alerts
+    \item \texttt{sp\_patient\_progress\_timeline} - Get care timeline
+\end{itemize}
+
+\subsubsection{Clinical Operations Procedures}
+
+\begin{itemize}
+    \item \texttt{sp\_compute\_adherence} - Calculate adherence percentage
+    \item \texttt{sp\_check\_overdue\_vl} - Check for overdue VL tests
+    \item \texttt{sp\_mark\_missed\_appointments} - Mark missed appointments
+    \item \texttt{sp\_update\_patient\_status\_ltfu} - Update LTFU status
+    \item \texttt{sp\_check\_missed\_refills} - Check for missed refills
+\end{itemize}
+
+\subsubsection{CAG Management Procedures}
+
+\begin{itemize}
+    \item \texttt{sp\_cag\_add\_patient} - Add patient to CAG
+    \item \texttt{sp\_cag\_remove\_patient} - Remove patient from CAG
+    \item \texttt{sp\_cag\_record\_rotation} - Record CAG rotation
+    \item \texttt{sp\_cag\_get\_members} - Get CAG members
+    \item \texttt{sp\_cag\_get\_rotations} - Get rotation history
+    \item \texttt{sp\_cag\_get\_statistics} - Get CAG statistics
+\end{itemize}
+
+\subsubsection{Example Stored Procedure}
+
+\begin{lstlisting}
+CREATE PROCEDURE `sp_compute_adherence`(
+    IN p_patient_id INT UNSIGNED,
+    IN p_start_date DATE,
+    IN p_end_date DATE
+)
+BEGIN
+    DECLARE v_pills_expected INT UNSIGNED;
+    DECLARE v_pills_missed INT UNSIGNED;
+    DECLARE v_adherence_percentage DECIMAL(5,2);
+    
+    -- Calculate adherence from dispense records
+    SELECT SUM(quantity_dispensed) INTO v_pills_expected
+    FROM dispense
+    WHERE patient_id = p_patient_id
+      AND dispense_date BETWEEN p_start_date AND p_end_date;
+    
+    -- Calculate adherence percentage
+    SET v_adherence_percentage = 
+        ((v_pills_expected - v_pills_missed) / v_pills_expected) * 100;
+    
+    -- Save to adherence log
+    INSERT INTO adherence_log (
+        patient_id, log_date, method_used, 
+        adherence_percent, notes
+    ) VALUES (
+        p_patient_id, CURDATE(), 'Computed',
+        v_adherence_percentage, 'Computed from dispense records'
+    );
+    
+    SELECT v_adherence_percentage AS adherence_percentage;
+END
+\end{lstlisting}
+
+\subsection{Triggers}
+
+\subsubsection{Alert Triggers}
+
+\begin{itemize}
+    \item \texttt{trg\_lab\_test\_high\_vl\_alert} - Creates alert on high VL (>1000) insertion
+    \item \texttt{trg\_lab\_test\_high\_vl\_alert\_update} - Creates alert on VL update
+    \item \texttt{trg\_appointment\_missed\_alert} - Creates alert on missed appointment
+    \item \texttt{trg\_adherence\_low\_alert} - Creates alert on low adherence (<85\%)
+\end{itemize}
+
+\subsubsection{Audit Triggers}
+
+\begin{itemize}
+    \item \texttt{trg\_patient\_audit\_insert} - Logs patient creation
+    \item \texttt{trg\_patient\_audit\_update} - Logs patient updates
+    \item \texttt{trg\_visit\_audit\_insert} - Logs visit creation
+    \item \texttt{trg\_lab\_test\_audit\_insert} - Logs lab test creation
+    \item \texttt{trg\_lab\_test\_audit\_update} - Logs lab test updates
+    \item \texttt{trg\_dispense\_audit\_insert} - Logs dispense creation
+\end{itemize}
+
+\subsubsection{Example Trigger}
+
+\begin{lstlisting}
+CREATE TRIGGER `trg_lab_test_high_vl_alert`
+AFTER INSERT ON `lab_test`
+FOR EACH ROW
+BEGIN
+    IF NEW.test_type = 'Viral Load' 
+       AND NEW.result_status = 'Completed' 
+       AND NEW.result_numeric IS NOT NULL 
+       AND NEW.result_numeric > 1000 THEN
+        
+        INSERT INTO alert (
+            patient_id, alert_type, alert_level,
+            alert_msg, is_resolved
+        ) VALUES (
+            NEW.patient_id, 'High Viral Load', 'Critical',
+            CONCAT('High viral load detected: ', 
+                   NEW.result_numeric, ' copies/mL. Action required.'),
+            FALSE
+        );
+    END IF;
+END
+\end{lstlisting}
+
+\subsection{Scheduled Events}
+
+Five scheduled events for automation:
+
+\begin{enumerate}
+    \item \texttt{evt\_daily\_check\_overdue\_vl} - Daily at 8 AM, checks for overdue VL tests
+    \item \texttt{evt\_daily\_check\_missed\_appointments} - Daily at 8 AM, marks missed appointments
+    \item \texttt{evt\_daily\_check\_missed\_refills} - Daily at 8 AM, checks for missed refills
+    \item \texttt{evt\_daily\_update\_ltfu} - Daily at 7 AM, updates LTFU status
+    \item \texttt{evt\_weekly\_compute\_adherence} - Weekly at 9 AM, computes adherence for all patients
+\end{enumerate}
+
+\subsubsection{Example Event}
+
+\begin{lstlisting}
+CREATE EVENT `evt_daily_check_overdue_vl`
+ON SCHEDULE EVERY 1 DAY
+STARTS CURRENT_DATE + INTERVAL 1 DAY + INTERVAL 8 HOUR
+DO
+BEGIN
+    CALL sp_check_overdue_vl();
+END
+\end{lstlisting}
+
+\subsection{Backup and Recovery Strategies}
+
+\subsubsection{Database Backup}
+
+\begin{lstlisting}
+-- Full database backup
+mysqldump -u root -p hiv_patient_care > 
+    backup_hiv_patient_care_$(date +\%Y\%m\%d).sql
+
+-- Backup with structure and data
+mysqldump -u root -p --routines --triggers 
+    hiv_patient_care > full_backup.sql
+\end{lstlisting}
+
+\subsubsection{Recovery Procedures}
+
+\begin{enumerate}
+    \item \textbf{Point-in-Time Recovery}: Using binary logs for transaction recovery
+    \item \textbf{Full Backup Restoration}: Restore from daily backup files
+    \item \textbf{Incremental Backup}: Daily full backups with transaction log archiving
+    \item \textbf{Disaster Recovery Plan}: Off-site backup storage and recovery procedures
+\end{enumerate}
+
+\subsubsection{Backup Schedule}
+
+\begin{itemize}
+    \item \textbf{Daily}: Full database backup at 2:00 AM
+    \item \textbf{Weekly}: Archive backups to external storage
+    \item \textbf{Monthly}: Long-term backup retention
+    \item \textbf{Before Major Updates}: Pre-update backup creation
+\end{itemize}
+
+% ============================================================================
+% MILESTONE FIVE: DOCUMENTATION AND DISSEMINATION
+% ============================================================================
+\section{Milestone Five: Documentation and Dissemination}
+
+\subsection{System Testing}
+
+\subsubsection{Data Integrity Testing}
+
+The system was tested using \texttt{verify\_data.sql} which checks:
+\begin{itemize}
+    \item Table record counts (17 tables verified)
+    \item Foreign key integrity (no orphaned records)
+    \item Data consistency (date validations, range checks)
+    \item Uniqueness constraints (no duplicate keys)
+    \item Enum value validity (all values within allowed sets)
+    \item Referential data completeness
+\end{itemize}
+
+\subsubsection{Functional Testing}
+
+\begin{itemize}
+    \item \textbf{Patient Registration}: Successfully creates patient records with NIN validation
+    \item \textbf{Visit Recording}: Correctly links visits to patients and staff
+    \item \textbf{Lab Test Entry}: Validates test types and result formats
+    \item \textbf{Medication Dispensing}: Calculates next refill dates correctly
+    \item \textbf{Alert Generation}: Triggers fire correctly for high VL, missed appointments
+    \item \textbf{Role-Based Access}: Users can only access permitted data
+    \item \textbf{Stored Procedures}: All 21 procedures execute successfully
+\end{itemize}
+
+\subsubsection{Performance Testing}
+
+\begin{itemize}
+    \item Query execution times measured for common operations
+    \item Index effectiveness verified through EXPLAIN plans
+    \item Database size: Approximately 1.7MB with sample data
+    \item Response times: Sub-second for most queries
+\end{itemize}
+
+\subsection{System Deliverables}
+
+\subsubsection{Database Files}
+
+\begin{itemize}
+    \item \texttt{schema.sql} - Database structure (17 tables)
+    \item \texttt{triggers.sql} - 8 triggers
+    \item \texttt{views.sql} - 15+ views
+    \item \texttt{stored\_procedures.sql} - 21 stored procedures
+    \item \texttt{events.sql} - 5 scheduled events
+    \item \texttt{security.sql} - Roles and privileges
+    \item \texttt{hiv\_patient\_care.sql} - Combined complete setup file
+\end{itemize}
+
+\subsubsection{Documentation Files}
+
+\begin{itemize}
+    \item \texttt{README.md} - Comprehensive project documentation
+    \item \texttt{SETUP\_ORDER.md} - Database setup instructions
+    \item \texttt{QUICK\_START.md} - Quick start guide
+    \item \texttt{database\_relationships.md} - Foreign key documentation
+    \item \texttt{verify\_data.sql} - Data verification script
+    \item \texttt{role\_based\_analysis.sql} - Role-based analysis queries
+\end{itemize}
+
+\subsubsection{API Documentation}
+
+\begin{itemize}
+    \item RESTful API with JWT authentication
+    \item 12 route modules covering all system functions
+    \item Complete endpoint documentation
+    \item Authentication and authorization middleware
+\end{itemize}
+
+\subsection{Key Features Demonstrated}
+
+\begin{enumerate}
+    \item \textbf{EER Modeling}: Generalization, specialization, categorization
+    \item \textbf{Data Integrity}: Foreign keys, check constraints, unique constraints
+    \item \textbf{Security}: Role-based access control, user authentication, audit logging
+    \item \textbf{Automation}: Triggers for alerts, stored procedures for business logic
+    \item \textbf{Reporting}: Views for different user roles, analytics queries
+    \item \textbf{Performance}: Strategic indexing, optimized queries
+    \item \textbf{Maintenance}: Scheduled events, backup strategies
+\end{enumerate}
+
+\subsection{SDG Impact}
+
+This system directly contributes to \textbf{SDG 3: Good Health and Well-being} by:
+
+\begin{itemize}
+    \item Improving treatment adherence through automated tracking
+    \item Enabling early detection of treatment failures
+    \item Supporting viral suppression goals
+    \item Reducing lost-to-follow-up rates
+    \item Facilitating evidence-based decision making
+    \item Supporting national HIV response programs
+\end{itemize}
+
+% ============================================================================
+% CONCLUSION
+% ============================================================================
+\section{Conclusion}
+
+This project successfully demonstrates the design and implementation of a comprehensive database application for HIV patient care management. The system addresses critical challenges in paper-based record keeping and provides a robust, secure, and automated solution for healthcare facilities in Uganda.
+
+\textbf{Key Achievements:}
+\begin{itemize}
+    \item Complete EER model with all required features (generalization, specialization, categorization)
+    \item Comprehensive data validation through constraints
+    \item Robust security implementation with role-based access control
+    \item Extensive automation through triggers and stored procedures
+    \item Complete documentation and testing
+    \item Alignment with SDG 3 and Uganda MOH standards
+\end{itemize}
+
+The system is ready for deployment and can significantly improve patient care outcomes, treatment adherence, and operational efficiency at healthcare facilities managing HIV patients in Uganda.
+
+% ============================================================================
+% APPENDICES
+% ============================================================================
+\section{Appendices}
+
+\subsection{Appendix A: Database Schema Summary}
+
+\textbf{Total Tables:} 17\\
+\textbf{Total Views:} 15+\\
+\textbf{Total Stored Procedures:} 21\\
+\textbf{Total Triggers:} 8\\
+\textbf{Total Scheduled Events:} 5\\
+\textbf{Total Roles:} 7\\
+\textbf{Total Foreign Keys:} 25+\\
+\textbf{Total Indexes:} 30+
+
+\subsection{Appendix B: File Structure}
+
+\begin{lstlisting}
+Database-Programming-Research-Project/
+├── database/
+│   ├── schema.sql
+│   ├── triggers.sql
+│   ├── views.sql
+│   ├── stored_procedures.sql
+│   ├── events.sql
+│   ├── security.sql
+│   ├── seed_data.sql (DUMMY DATA)
+│   ├── verify_data.sql
+│   ├── role_based_analysis.sql
+│   └── hiv_patient_care.sql (combined)
+├── backend/ (API implementation)
+├── docs/ (documentation)
+└── eerd/ (EER diagrams)
+\end{lstlisting}
+
+\subsection{Appendix C: Project Repository}
+
+\textbf{GitHub Repository:} \url{https://github.com/Cemputus/Database-Programming-Research-Project}
+
+The complete source code, documentation, database scripts, and all project files are available in the GitHub repository. The repository includes:
+\begin{itemize}
+    \item Complete database schema and implementation files
+    \item Backend API source code (Node.js/Express)
+    \item Comprehensive documentation (README, setup guides, API documentation)
+    \item EER diagram images and project documentation
+    \item Database verification and analysis scripts
+    \item Setup scripts and configuration files
+\end{itemize}
+
+\textbf{Repository Access:} The project is publicly available for academic review and can be cloned using:
+\begin{lstlisting}
+git clone https://github.com/Cemputus/Database-Programming-Research-Project.git
+\end{lstlisting}
+
+\subsection{Appendix D: References}
+
+\begin{enumerate}
+    \item Uganda Ministry of Health. (2023). \textit{HIV Treatment Guidelines}. Kampala, Uganda.
+    \item Uganda AIDS Commission. (2023). \textit{National HIV/AIDS Strategic Plan}. Kampala, Uganda.
+    \item United Nations. (2015). \textit{Sustainable Development Goals}. Goal 3: Good Health and Well-being.
+    \item MySQL 8.0 Reference Manual. Oracle Corporation.
+    \item Connolly, T. \& Begg, C. (2015). \textit{Database Systems: A Practical Approach to Design, Implementation, and Management}. 6th Edition.
+\end{enumerate}
+
+% ============================================================================
+% END OF DOCUMENT
+% ============================================================================
+
+\end{document}
+

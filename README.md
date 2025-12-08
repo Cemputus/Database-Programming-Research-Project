@@ -9,6 +9,8 @@
 
 **A comprehensive database-driven system for managing HIV patient care, treatment monitoring, and clinical operations at Mukono General Hospital ART Clinic, Uganda**
 
+**📚 Academic Project**: This project is developed as **partial fulfillment** of the requirements for a **Bachelor of Science in Data Science and Analytics** at **Uganda Christian University**.
+
 [Features](#-key-features) • [Installation](#-installation) • [Documentation](#-documentation) • [API Reference](#-api-reference) • [Contributing](#-contributing)
 
 </div>
@@ -227,7 +229,17 @@ This problem is particularly well-suited for a comprehensive database solution b
 
 ## 🎯 Overview
 
+### Academic Context
+
+<div align="center">
+
+**📚 This project is developed as partial fulfillment of the requirements for a Bachelor of Science in Data Science and Analytics at Uganda Christian University**
+
+</div>
+
 The **HIV Patient Care & Treatment Monitoring System** is a comprehensive database and API solution designed specifically for **Mukono General Hospital ART Clinic** in Uganda. The system manages the complete lifecycle of HIV patient care, from enrollment through treatment monitoring, adherence tracking, and clinical reporting.
+
+**Academic Purpose**: This project demonstrates advanced database design concepts, including Enhanced Entity Relationship (EER) modeling, stored procedures, triggers, views, role-based access control, and comprehensive data management for healthcare applications. It serves as a capstone project showcasing practical application of database programming principles in a real-world healthcare context.
 
 ### Purpose
 
@@ -1263,9 +1275,22 @@ See `LICENSE` file for details.
 ### Project Information
 
 - **Project Name**: HIV Patient Care & Treatment Monitoring System
-- **Institution**: Mukono General Hospital ART Clinic
+- **Academic Institution**: Uganda Christian University
+- **Degree Program**: Bachelor of Science in Data Science and Analytics
+- **Project Type**: Partial Fulfillment of Degree Requirements
+- **Target Facility**: Mukono General Hospital ART Clinic
 - **Location**: Uganda
 - **Version**: 1.0.0
+
+### Academic Declaration
+
+This project is submitted as **partial fulfillment** of the requirements for the degree of **Bachelor of Science in Data Science and Analytics** at **Uganda Christian University**. All work presented in this project is original and has been developed for academic purposes. The system demonstrates proficiency in:
+
+- Database design and implementation (EER modeling, normalization)
+- Advanced SQL programming (stored procedures, triggers, views, events)
+- Role-based access control and security implementation
+- API development and integration
+- Healthcare data management systems
 
 ### Support Resources
 
@@ -1298,7 +1323,10 @@ When reporting issues, please include:
 
 <div align="center">
 
-**Built for improving HIV patient care in Uganda(Academic purposes)**
+**Built for improving HIV patient care in Uganda**
+
+**📚 Academic Project - Bachelor of Science in Data Science and Analytics**  
+**Uganda Christian University**
 
 [⬆ Back to Top](#-table-of-contents)
 
