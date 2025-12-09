@@ -37,6 +37,7 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON hiv_patient_care.* TO 'db_admin';
 GRANT CREATE, ALTER, DROP, INDEX, CREATE VIEW, SHOW VIEW ON hiv_patient_care.* TO 'db_admin';
 
 -- Grant execute on all stored procedures to db_admin
+GRANT EXECUTE ON PROCEDURE hiv_patient_care.`sp_check_authorization` TO 'db_admin';
 GRANT EXECUTE ON PROCEDURE hiv_patient_care.`sp_compute_adherence` TO 'db_admin';
 GRANT EXECUTE ON PROCEDURE hiv_patient_care.`sp_check_overdue_vl` TO 'db_admin';
 GRANT EXECUTE ON PROCEDURE hiv_patient_care.`sp_mark_missed_appointments` TO 'db_admin';
@@ -74,6 +75,7 @@ GRANT INSERT, UPDATE ON hiv_patient_care.`alert` TO 'db_clinician';
 GRANT SELECT ON hiv_patient_care.`audit_log` TO 'db_clinician';
 
 -- Execute procedures
+GRANT EXECUTE ON PROCEDURE hiv_patient_care.`sp_check_authorization` TO 'db_clinician';
 GRANT EXECUTE ON PROCEDURE hiv_patient_care.`sp_compute_adherence` TO 'db_clinician';
 GRANT EXECUTE ON PROCEDURE hiv_patient_care.`sp_check_overdue_vl` TO 'db_clinician';
 GRANT EXECUTE ON PROCEDURE hiv_patient_care.`sp_mark_missed_appointments` TO 'db_clinician';
@@ -94,6 +96,9 @@ GRANT SELECT ON hiv_patient_care.`visit` TO 'db_lab';
 GRANT SELECT ON hiv_patient_care.`regimen` TO 'db_lab';
 GRANT SELECT ON hiv_patient_care.`dispense` TO 'db_lab';
 
+-- Execute authorization procedure
+GRANT EXECUTE ON PROCEDURE hiv_patient_care.`sp_check_authorization` TO 'db_lab';
+
 -- ============================================================================
 -- GRANT PRIVILEGES: db_pharmacy
 -- Pharmacists: read patient/regimen data, write dispense records
@@ -108,6 +113,9 @@ GRANT INSERT, UPDATE ON hiv_patient_care.`dispense` TO 'db_pharmacy';
 GRANT SELECT ON hiv_patient_care.`lab_test` TO 'db_pharmacy';
 GRANT SELECT ON hiv_patient_care.`appointment` TO 'db_pharmacy';
 GRANT SELECT ON hiv_patient_care.`alert` TO 'db_pharmacy';
+
+-- Execute authorization procedure
+GRANT EXECUTE ON PROCEDURE hiv_patient_care.`sp_check_authorization` TO 'db_pharmacy';
 
 -- ============================================================================
 -- GRANT PRIVILEGES: db_counselor
@@ -125,6 +133,9 @@ GRANT SELECT ON hiv_patient_care.`lab_test` TO 'db_counselor';
 GRANT SELECT ON hiv_patient_care.`dispense` TO 'db_counselor';
 GRANT SELECT ON hiv_patient_care.`alert` TO 'db_counselor';
 
+-- Execute authorization procedure
+GRANT EXECUTE ON PROCEDURE hiv_patient_care.`sp_check_authorization` TO 'db_counselor';
+
 -- ============================================================================
 -- GRANT PRIVILEGES: db_readonly
 -- Records officers: read-only access to all tables and views
@@ -139,6 +150,9 @@ GRANT SELECT ON hiv_patient_care.`v_active_alerts_summary` TO 'db_readonly';
 GRANT SELECT ON hiv_patient_care.`v_viral_load_monitoring` TO 'db_readonly';
 GRANT SELECT ON hiv_patient_care.`v_adherence_summary` TO 'db_readonly';
 GRANT SELECT ON hiv_patient_care.`v_staff_with_roles` TO 'db_readonly';
+
+-- Execute authorization procedure
+GRANT EXECUTE ON PROCEDURE hiv_patient_care.`sp_check_authorization` TO 'db_readonly';
 
 -- ============================================================================
 -- Example: Create Users and Assign Roles
@@ -187,6 +201,9 @@ GRANT SELECT ON hiv_patient_care.`v_patient_appointments` TO 'db_patient';
 GRANT SELECT ON hiv_patient_care.`v_patient_adherence_history` TO 'db_patient';
 GRANT SELECT ON hiv_patient_care.`v_patient_alerts` TO 'db_patient';
 GRANT SELECT ON hiv_patient_care.`v_patient_progress_timeline` TO 'db_patient';
+
+-- Execute authorization procedure
+GRANT EXECUTE ON PROCEDURE hiv_patient_care.`sp_check_authorization` TO 'db_patient';
 
 -- Execute patient self-service procedures
 GRANT EXECUTE ON PROCEDURE hiv_patient_care.`sp_patient_dashboard` TO 'db_patient';

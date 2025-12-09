@@ -43,6 +43,11 @@
 USE hiv_patient_care;
 
 -- ============================================================================
+-- NOTE: The sp_check_authorization procedure is defined in stored_procedures.sql
+-- GRANT statements for sp_check_authorization are in security.sql
+-- ============================================================================
+
+-- ============================================================================
 -- VERIFY CURRENT USER AND ROLE
 -- ============================================================================
 -- Check your current login and active role before running analyses
@@ -65,15 +70,11 @@ SELECT
 -- REQUIRED ROLE: db_admin
 -- ============================================================================
 
--- Verify role before proceeding
-SELECT 
-    CASE 
-        WHEN CURRENT_ROLE() LIKE '%db_admin%' OR CURRENT_USER() = 'nsubuga@localhost' THEN 
-            '✓ AUTHORIZED: Admin role verified. Proceeding with admin analyses...'
-        ELSE 
-            CONCAT('✗ UNAUTHORIZED: Current role is ', COALESCE(CURRENT_ROLE(), 'NULL'), 
-                   '. Please login as nsubuga@localhost with db_admin role.')
-    END AS authorization_check;
+-- Enforce authorization - will raise error if unauthorized
+CALL sp_check_authorization('db_admin', 'nsubuga@localhost');
+
+-- Display authorization success message
+SELECT '✓ AUTHORIZED: Admin role verified. Proceeding with admin analyses...' AS authorization_check;
 
 -- 1.1 System Overview Dashboard
 SELECT '=== ADMIN: SYSTEM OVERVIEW ===' AS section;
@@ -210,15 +211,11 @@ WHERE session_date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY);
 -- REQUIRED ROLE: db_clinician
 -- ============================================================================
 
--- Verify role before proceeding
-SELECT 
-    CASE 
-        WHEN CURRENT_ROLE() LIKE '%db_clinician%' OR CURRENT_USER() = 'doctor1@localhost' THEN 
-            '✓ AUTHORIZED: Clinician role verified. Proceeding with clinical analyses...'
-        ELSE 
-            CONCAT('✗ UNAUTHORIZED: Current role is ', COALESCE(CURRENT_ROLE(), 'NULL'), 
-                   '. Please login as doctor1@localhost with db_clinician role.')
-    END AS authorization_check;
+-- Enforce authorization - will raise error if unauthorized
+CALL sp_check_authorization('db_clinician', 'doctor1@localhost');
+
+-- Display authorization success message
+SELECT '✓ AUTHORIZED: Clinician role verified. Proceeding with clinical analyses...' AS authorization_check;
 
 -- 2.1 Active Patients Requiring Attention
 SELECT '=== CLINICIAN: PATIENTS REQUIRING ATTENTION ===' AS section;
@@ -382,15 +379,11 @@ ORDER BY enrollment_year DESC;
 -- REQUIRED ROLE: db_lab
 -- ============================================================================
 
--- Verify role before proceeding
-SELECT 
-    CASE 
-        WHEN CURRENT_ROLE() LIKE '%db_lab%' OR CURRENT_USER() = 'lab_tech1@localhost' THEN 
-            '✓ AUTHORIZED: Lab technician role verified. Proceeding with lab analyses...'
-        ELSE 
-            CONCAT('✗ UNAUTHORIZED: Current role is ', COALESCE(CURRENT_ROLE(), 'NULL'), 
-                   '. Please login as lab_tech1@localhost with db_lab role.')
-    END AS authorization_check;
+-- Enforce authorization - will raise error if unauthorized
+CALL sp_check_authorization('db_lab', 'lab_tech1@localhost');
+
+-- Display authorization success message
+SELECT '✓ AUTHORIZED: Lab technician role verified. Proceeding with lab analyses...' AS authorization_check;
 
 -- 3.1 Lab Test Volume by Type
 SELECT '=== LAB: TEST VOLUME BY TYPE ===' AS section;
@@ -479,15 +472,11 @@ WHERE test_type = 'Viral Load'
 -- REQUIRED ROLE: db_pharmacy
 -- ============================================================================
 
--- Verify role before proceeding
-SELECT 
-    CASE 
-        WHEN CURRENT_ROLE() LIKE '%db_pharmacy%' OR CURRENT_USER() = 'pharmacist1@localhost' THEN 
-            '✓ AUTHORIZED: Pharmacy role verified. Proceeding with pharmacy analyses...'
-        ELSE 
-            CONCAT('✗ UNAUTHORIZED: Current role is ', COALESCE(CURRENT_ROLE(), 'NULL'), 
-                   '. Please login as pharmacist1@localhost with db_pharmacy role.')
-    END AS authorization_check;
+-- Enforce authorization - will raise error if unauthorized
+CALL sp_check_authorization('db_pharmacy', 'pharmacist1@localhost');
+
+-- Display authorization success message
+SELECT '✓ AUTHORIZED: Pharmacy role verified. Proceeding with pharmacy analyses...' AS authorization_check;
 
 -- 4.1 Dispensing Volume Trends
 SELECT '=== PHARMACY: DISPENSING VOLUME TRENDS ===' AS section;
@@ -590,15 +579,11 @@ ORDER BY days_since_last_rotation DESC, total_rotations DESC;
 -- REQUIRED ROLE: db_counselor
 -- ============================================================================
 
--- Verify role before proceeding
-SELECT 
-    CASE 
-        WHEN CURRENT_ROLE() LIKE '%db_counselor%' OR CURRENT_USER() = 'counselor1@localhost' THEN 
-            '✓ AUTHORIZED: Counselor role verified. Proceeding with counseling analyses...'
-        ELSE 
-            CONCAT('✗ UNAUTHORIZED: Current role is ', COALESCE(CURRENT_ROLE(), 'NULL'), 
-                   '. Please login as counselor1@localhost with db_counselor role.')
-    END AS authorization_check;
+-- Enforce authorization - will raise error if unauthorized
+CALL sp_check_authorization('db_counselor', 'counselor1@localhost');
+
+-- Display authorization success message
+SELECT '✓ AUTHORIZED: Counselor role verified. Proceeding with counseling analyses...' AS authorization_check;
 
 -- 5.1 Overall Adherence Statistics
 SELECT '=== COUNSELOR: OVERALL ADHERENCE STATISTICS ===' AS section;
@@ -716,15 +701,11 @@ ORDER BY assessment_month DESC;
 -- REQUIRED ROLE: db_readonly
 -- ============================================================================
 
--- Verify role before proceeding
-SELECT 
-    CASE 
-        WHEN CURRENT_ROLE() LIKE '%db_readonly%' OR CURRENT_USER() = 'records_officer1@localhost' THEN 
-            '✓ AUTHORIZED: Read-only role verified. Proceeding with reporting queries...'
-        ELSE 
-            CONCAT('✗ UNAUTHORIZED: Current role is ', COALESCE(CURRENT_ROLE(), 'NULL'), 
-                   '. Please login as records_officer1@localhost with db_readonly role.')
-    END AS authorization_check;
+-- Enforce authorization - will raise error if unauthorized
+CALL sp_check_authorization('db_readonly', 'records_officer1@localhost');
+
+-- Display authorization success message
+SELECT '✓ AUTHORIZED: Read-only role verified. Proceeding with reporting queries...' AS authorization_check;
 
 -- 6.1 Monthly Activity Summary Report
 SELECT '=== READONLY: MONTHLY ACTIVITY SUMMARY ===' AS section;
@@ -804,15 +785,11 @@ ORDER BY alert_type, alert_level;
 -- REQUIRED ROLE: db_admin
 -- ============================================================================
 
--- Verify role before proceeding
-SELECT 
-    CASE 
-        WHEN CURRENT_ROLE() LIKE '%db_admin%' OR CURRENT_USER() = 'nsubuga@localhost' THEN 
-            '✓ AUTHORIZED: Admin role verified. Proceeding with cross-role analyses...'
-        ELSE 
-            CONCAT('✗ UNAUTHORIZED: Current role is ', COALESCE(CURRENT_ROLE(), 'NULL'), 
-                   '. Please login as nsubuga@localhost with db_admin role.')
-    END AS authorization_check;
+-- Enforce authorization - will raise error if unauthorized
+CALL sp_check_authorization('db_admin', 'nsubuga@localhost');
+
+-- Display authorization success message
+SELECT '✓ AUTHORIZED: Admin role verified. Proceeding with cross-role analyses...' AS authorization_check;
 
 -- 7.1 Patient Retention Analysis
 SELECT '=== CROSS-ROLE: PATIENT RETENTION ANALYSIS ===' AS section;

@@ -8,6 +8,46 @@ USE hiv_patient_care;
 DELIMITER //
 
 -- ============================================================================
+-- SP: Check Authorization (Role-Based Access Control)
+-- Enforces role-based access control for analysis queries
+-- Raises an error if user is not authorized
+-- ============================================================================
+
+DROP PROCEDURE IF EXISTS `sp_check_authorization`//
+CREATE PROCEDURE `sp_check_authorization`(
+    IN p_required_role VARCHAR(50),
+    IN p_expected_user VARCHAR(100)
+)
+BEGIN
+    DECLARE v_current_role VARCHAR(255);
+    DECLARE v_current_user VARCHAR(255);
+    DECLARE v_is_authorized BOOLEAN DEFAULT FALSE;
+    DECLARE v_expected_username VARCHAR(100);
+    
+    -- Get current role and user
+    SET v_current_role = COALESCE(CURRENT_ROLE(), '');
+    SET v_current_user = COALESCE(CURRENT_USER(), '');
+    SET v_expected_username = SUBSTRING_INDEX(p_expected_user, '@', 1);
+    
+    -- Check authorization with multiple conditions:
+    -- 1. Active role contains required role name
+    -- 2. User matches expected user exactly
+    -- 3. Username matches (ignoring host part like @localhost vs @%)
+    IF (LOCATE(p_required_role, v_current_role) > 0
+        OR v_current_user = p_expected_user
+        OR (v_expected_username != '' AND LOCATE(v_expected_username, v_current_user) = 1)) THEN
+        SET v_is_authorized = TRUE;
+    END IF;
+    
+    -- If not authorized, raise error
+    -- Note: MESSAGE_TEXT has a strict 64 character limit in MySQL
+    IF NOT v_is_authorized THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'ACCESS DENIED. Contact Administrator.';
+    END IF;
+END//
+
+-- ============================================================================
 -- SP: Compute Adherence for a Patient
 -- Calculates medication adherence percentage (0-100%)
 -- Based on dispense records: (pills taken / pills expected) × 100
@@ -26,18 +66,25 @@ BEGIN
     DECLARE v_adherence_percentage DECIMAL(5,2);
     DECLARE v_days_in_period INT;
     DECLARE v_daily_pills INT UNSIGNED DEFAULT 1;
+    DECLARE v_quantity_dispensed INT UNSIGNED;
+    DECLARE v_days_supply INT UNSIGNED;
     
     -- Get most recent dispense to determine current prescription
-    SELECT d.days_supply, d.quantity_dispensed, d.dispense_date
-    INTO v_days_in_period, v_pills_expected, v_daily_pills
+    SELECT d.days_supply, d.quantity_dispensed
+    INTO v_days_supply, v_quantity_dispensed
     FROM dispense d
     WHERE d.patient_id = p_patient_id
       AND d.dispense_date <= COALESCE(p_end_date, CURDATE())
     ORDER BY d.dispense_date DESC
     LIMIT 1;
     
-    -- Default to 30 days if no dispense record found
-    IF v_days_in_period IS NULL THEN
+    -- Calculate daily pills from most recent dispense
+    IF v_days_supply IS NOT NULL AND v_days_supply > 0 AND v_quantity_dispensed IS NOT NULL THEN
+        SET v_daily_pills = ROUND(v_quantity_dispensed / v_days_supply);
+        SET v_days_in_period = v_days_supply;
+        SET v_pills_expected = v_quantity_dispensed;
+    ELSE
+        -- Default to 30 days if no dispense record found
         SET v_days_in_period = DATEDIFF(COALESCE(p_end_date, CURDATE()), COALESCE(p_start_date, DATE_SUB(CURDATE(), INTERVAL 30 DAY)));
         SET v_pills_expected = v_days_in_period * v_daily_pills;
     END IF;
