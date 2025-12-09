@@ -130,7 +130,7 @@ CREATE TABLE IF NOT EXISTS `staff_role` (
 
 -- ============================================================================
 -- VISIT TABLE
--- Records clinical visits - compliant with HMIS 031 form
+-- Records clinical visits - compliant with HMIS 031 form (Health Mansagement Information System)
 -- Tracks vital signs, symptoms, and diagnoses
 -- ============================================================================
 
@@ -161,7 +161,7 @@ CREATE TABLE IF NOT EXISTS `visit` (
 -- ============================================================================
 -- LAB_TEST TABLE
 -- Stores laboratory test results
--- Supports CPHL viral load program with sample IDs
+-- Supports CPHL(Central Public Health Lab) viral load program with sample IDs
 -- Test types: Viral Load, CD4, HB, Creatinine, Malaria RDT, TB-LAM, Urinalysis
 -- ============================================================================
 

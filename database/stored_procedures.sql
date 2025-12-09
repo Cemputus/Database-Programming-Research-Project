@@ -125,7 +125,10 @@ BEGIN
            v_pills_expected AS pills_expected;
 END//
 
--- ============================================================================
+-- ==========
+use hiv_patient_care;
+
+==================================================================
 -- SP: Check Overdue Viral Load Tests
 -- Finds patients overdue for VL test (>180 days per Uganda guidelines)
 -- Creates 'Overdue VL' alerts for patients needing tests
